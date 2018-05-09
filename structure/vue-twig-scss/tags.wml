@@ -23,9 +23,19 @@ cta:
   data: "{text:'Action', link:''}"
   html: '<tag element="cta" href="{{ data.link }}">{{ data.text }}</tag>'
 
+media:
+  is: media
+  data: "{image:asset('/tmp/placeholder.jpg'), video:asset('/tmp/placeholder.mp4')}"
+  html: '<media image="{{ data.image }}" video={{ data.video }}></media>'
+
 date: time
 
 thumbnail:
+  is: div
+  innerHtml: '<img src="{{ data }}"/>'
+  data: "asset('/tmp/placeholder.jpg')"
+
+img:
   is: div
   innerHtml: '<img src="{{ data }}"/>'
   data: "asset('/tmp/placeholder.jpg')"
@@ -34,6 +44,7 @@ article: article
 close: button
 download: button
 next: button
+prev: button
 previous: button
 button: button
 header: header
@@ -41,6 +52,15 @@ heading: header
 footer: footer
 grid: section
 project: article
+
+url:
+  data: '#'
+  html: '<a href="{{ data }}"></a>'
+
+video:
+  is: div
+  data: "asset('/tmp/placeholder.mp4')"
+  innerHtml: '<video><source src="{{ data }}"/></video>'
 
 wysiwyg:
   is: div

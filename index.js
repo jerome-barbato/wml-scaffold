@@ -1,46 +1,41 @@
-var yaml  = require('js-yaml');
-var fs    = require('fs');
-var path  = require('path');
-var mkdir = require('mkdirp');
+
+var yaml       = require('js-yaml');
+var fs         = require('fs');
+var path       = require('path');
+var mkdir      = require('mkdirp');
 var _camelCase = require('lodash.camelcase');
+var _snakeCase = require('lodash.snakecase');
 
 var wml = (function (config) {
 
 	wml.files = [];
 
+
 	config = Object.assign({
+
 		outputPath: '.',
-		type: 'twig-scss'
+		type: 'vue-twig-scss'
 
 	}, config);
 
+
 	wml.prototype.process = function(args){
 
-		if( typeof args === 'object' && args.type === 'load')
-		{
-			return loadFile(args.data);
-		}
-		else if( typeof args === 'object' && args.type === 'write')
-		{
-			return writeFiles(args.data);
-		}
-		else
-		{
-			return loadTags()
-				.then(function(tags){
-					config.tags = tags;
-					return loadFile(args);
-				})
-				.then(generateFiles)
-				.then(function(){
-					return writeFiles(wml.files);
-				})
-		}
+		return loadTags()
+			.then(function(tags){
+				config.tags = tags;
+				return loadFile(args);
+			})
+			.then(generateFiles)
+			.then(function(){
+				return writeFiles(wml.files);
+			})
+
 	};
 
 
-	function camelCase(string)
-	{
+	function camelCase(string) {
+
 		string = _camelCase(string);
 		return string.charAt(0).toUpperCase() + string.slice(1);
 	}
@@ -87,8 +82,10 @@ var wml = (function (config) {
 
 			try {
 
-				if( typeof type === 'undefined' )
+				if( !isDefined(type) )
 					type = 'page';
+
+				name = _snakeCase(name);
 
 				var files = [];
 
@@ -98,28 +95,37 @@ var wml = (function (config) {
 				structure_files.forEach(function(structure_file){
 
 					var content = fs.readFileSync(structure_path+'/'+structure_file, 'utf8');
+
 					content = content
 						.replace(/{{ name }}/g, name)
 						.replace(/#{\$name}/g, name);
 
-					if( type === 'page' )
-					{
-						if( structure !== null && typeof structure === 'object' && typeof structure[0] !== 'undefined' && 'layout' in structure[0])
-							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'layout/'+structure[0].layout+'.twig\' %}\n');
-						else
+					if( type === 'page' ) {
+
+						if( isArray(structure) && isObject(structure[0]) && 'layout' in structure[0]) {
+
+							var layout_name = _snakeCase(structure[0].layout);
+							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'layout/'+layout_name+'.twig\' %}\n');
+						}
+						else {
+
 							content = content.replace(/{% extends layout %}\r\n/, '');
+						}
 					}
 
 					var components = [];
 
-					if( structure!= null && Array.isArray(structure) )
-					{
+					if( isArray(structure) ) {
+
 						structure.forEach(function(component){
 
-							var key = Object.keys(component)[0].split('|');
+							var key = ( isObject(component) ? Object.keys(component)[0] : component).split('|');
 
-							if( key[0] !== 'layout')
-								components.push("{% include 'component/"+key[0]+".twig' %}");
+							if( key[0] !== 'layout') {
+
+								var component_name = _snakeCase(key[0]);
+								components.push("{% include 'component/"+component_name+".twig' %}");
+							}
 						});
 					}
 
@@ -133,17 +139,17 @@ var wml = (function (config) {
 					files.push(file);
 				});
 
-				wml.files = wml.files.concat(files);
+				addFiles(files);
 
-				if( structure == null || !Array.isArray(structure) )
-				{
-					resolve(files);
-				}
-				else
-				{
+				if( isArray(structure) ) {
+
 					generateComponents(structure).then(function(){
 						resolve(files);
 					}).catch(reject);
+				}
+				else {
+
+					resolve(files);
 				}
 
 			} catch (e) {
@@ -153,7 +159,7 @@ var wml = (function (config) {
 	}
 
 
-	function processData(data){
+	function processData(data, indent){
 
 		var _data = {
 			scss: [],
@@ -164,16 +170,19 @@ var wml = (function (config) {
 
 
 		data.forEach(function(key){
+
 			Object.keys(_data).forEach(function(_key) {
 				if (key[_key].length)
 					_data[_key].push(key[_key]);
 			});
 		});
 
-		if( _data.content.length )
-			_data.content = '{% set data = {' + format(_data.content, ',', '\n\t', '\n')+'} %}'+'\n\n';
-		else
-			_data.content = '';
+		if( indent ){
+			_data.content = format(_data.content, ',\n\t');
+		}
+		else {
+			_data.content = format(_data.content, ',');
+		}
 
 		_data.scss = format(_data.scss, '', '\n\t');
 		_data.elements = format(_data.elements, '', '\n\t');
@@ -183,19 +192,20 @@ var wml = (function (config) {
 	}
 
 
-	function format(array, after, before, last)
-	{
+	function format(array, after, before, last) {
+
 		var formatted = '';
 		var i = 1;
 
 		array.map(function(value){
 
-			formatted += (typeof before !== 'undefined' ? before : '') + value + (typeof after !== 'undefined' && i < array.length ? after : '');
+			formatted += ( isDefined(before) ? before : '') + value + (isDefined(after) && i < array.length ? after : '');
 			i++;
 		});
 
-		return formatted + (typeof last !== 'undefined' ? last : '');
+		return formatted + (isDefined(last) ? last : '');
 	}
+
 
 	function generateComponents(components){
 
@@ -205,33 +215,46 @@ var wml = (function (config) {
 	}
 
 
+	function getModifiers(key){
+
+		var definition = key.split('|');
+
+		var name = definition[0].replace('$', '');
+		var modifiers = {
+			name: name,
+			type: _snakeCase(name),
+			extend: false,
+			loop: false,
+			tag: false
+		};
+
+		definition.forEach(function(filter){
+
+			filter = filter.replace(')','').split('(');
+
+			if( filter[0] in modifiers )
+				modifiers[filter[0]] = filter.length > 1 ? filter[1] : true;
+		});
+
+		if( modifiers.loop === true )
+			modifiers.loop = 2;
+
+		return modifiers;
+	}
+
+
 	function generateComponent(component){
 
 		return new Promise(function (resolve, reject) {
 
 			try {
-				var key = Object.keys(component)[0];
-				var definition = key.split('|');
-				var name = definition[0];
 
-				var modifiers = {
-					type: name,
-					extend: false,
-					loop: false,
-					tag: false
-				};
+				var key = isObject(component) ? Object.keys(component)[0] : component;
+				var modifiers = getModifiers(key);
+				var name = modifiers.name;
+				var filename = _snakeCase(name);
 
-				definition.forEach(function(filter){
-
-					filter = filter.replace(')','').split('(');
-
-					if( filter[0] in modifiers )
-						modifiers[filter[0]] = filter.length > 1 ? filter[1] : true;
-				});
-
-				if( name !== 'layout')
-				{
-					var elements = component[key];
+				if( name !== 'layout') {
 
 					var structure_path = modifiers.extend ? config.outputPath + '/component/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
 
@@ -240,20 +263,22 @@ var wml = (function (config) {
 
 					var structure_files = fs.readdirSync(structure_path);
 
+					var elements = isObject(component) ? component[key] : false;
+
 					generateData(elements).then(function(data) {
 
 						var files = [];
 
 						var tag = modifiers.tag ? modifiers.tag : ( name in config.tags ? config.tags[name] : config.tags['default'] );
-						tag = typeof tag === 'object' && 'is' in tag ? tag.is : tag;
+						tag = isObject(tag) && 'is' in tag ? tag.is : tag;
 
 						structure_files.forEach(function(structure_file){
 
-							var filepath = '/component/' + (structure_files.length > 1 ? name + '/' + name : name) + path.extname(structure_file);
+							var filepath = '/component/' + (structure_files.length > 1 ? filename + '/' + filename : filename) + path.extname(structure_file);
 							var content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
 
-							if( content.indexOf('<elements></elements>') !== -1 )
-								content = data.content + content;
+							if( content.indexOf('<elements></elements>') !== -1 && data.content.length )
+								content =  '{% set data = {\n\t'+data.content+'\n} %}\n\n' + content;
 
 							content = content
 								.replace(/{{ name }}/g, camelCase(name))
@@ -263,7 +288,7 @@ var wml = (function (config) {
 								.replace('<elements></elements>', data.elements)
 								.replace('<components></components>', data.components)
 								.replace('&__#{$elements}{ }', data.scss)
-								.replace('\n\t\n\t', '\n\t');
+								.replace(/\n\t\n/, '\n\t');
 
 							var file = {};
 							file[filepath] = content;
@@ -271,10 +296,11 @@ var wml = (function (config) {
 							files.push(file);
 						});
 
-						wml.files = wml.files.concat(files);
+						addFiles(files);
 
 						resolve({name:name, files:files, modifiers:modifiers});
 					});
+
 				}
 				else
 				{
@@ -288,54 +314,126 @@ var wml = (function (config) {
 	}
 
 
+	function addFiles(files){
+
+
+		wml.files = wml.files.concat(files);
+	}
+
+
+	function isObject(item){
+		return isDefined(item) && typeof item === 'object' && item.constructor === Object;
+	}
+
+	function isArray(item){
+		return isDefined(item) && Array.isArray(item);
+	}
+
+	function isIterable(item){
+		return isDefined(item) && typeof item === 'object';
+	}
+
+	function isDefined(item){
+		return item !== null && typeof item !== 'undefined'
+	}
+
+	function isString(item){
+		return isDefined(item) && typeof item === 'string';
+	}
+
+	function isComponent(item){
+		return isDefined(item) && ((isObject(item) && Object.keys(item)[0].indexOf('$') === 0) || ( isString(item) && item.indexOf('$') === 0 ));
+	}
+
+
 	function getData(element){
 
 		return new Promise(function (resolve, reject) {
 
 			var data = {
-				scss :'',
-				elements :'',
-				content :'',
-				components:''
+				scss: '',
+				elements: '',
+				content: '',
+				components: ''
 			};
 
-			if( typeof element === 'object')
-			{
-				generateComponent(element).then(function(component){
+			if( isIterable(element) || isComponent(element) ) {
 
-					var components = [];
+				if( isComponent(element) ) {
 
-					if( component.modifiers.loop )
-						components.push("{% for i in 1.."+(component.modifiers.loop===true?4:component.modifiers.loop)+" %}");
+					generateComponent(element).then(function(component){
 
-					components.push("\t{% include 'component/"+component.name+".twig' %}");
+						var components = [];
 
-					if( component.modifiers.loop )
-						components.push("{% endfor %}");
+						if( component.modifiers.loop )
+							components.push("{% for i in 1.."+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+" %}");
 
-					data.components = components.join('\n\t');
+						components.push((component.modifiers.loop?'\t':'')+"{% include 'component/"+_snakeCase(component.name)+".twig' %}");
 
-					resolve(data);
-				});
+						if( component.modifiers.loop )
+							components.push("{% endfor %}");
+
+						data.components = components.join('\n\t');
+
+						resolve(data);
+					});
+				}
+				else{
+
+					generateData(element).then(function(data){
+
+						if( isObject(element) )
+						{
+							var modifiers = getModifiers(Object.keys(element)[0]);
+							var name =  modifiers.name;
+
+							if( data.components.length )
+							{
+								data.elements += data.components;
+								data.components = '';
+							}
+
+							var tag = modifiers.tag ? modifiers.tag : (name in config.tags ? config.tags[name] : config.tags['default']);
+							var html_tag = typeof tag === 'object' && 'is' in tag ? tag.is : ( typeof tag === 'string' ? tag : 'div');
+
+							var elements = '<'+html_tag+' element="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
+
+							if( modifiers.loop )
+								elements = '{% for i in 1..'+modifiers.loop+' %}\n\t\t'+elements+'\t{% endfor %}\n';
+							else
+								elements = '\n\t'+elements;
+
+							data.elements = elements;
+						}
+
+						resolve(data)
+					});
+				}
+
 			}
-			else
-			{
-				if( typeof element === 'string' && element !== 'layout' )
+			else {
+
+				if( isString(element) && element !== 'layout' )
 				{
-					var tag = element in config.tags ? config.tags[element] : config.tags['default'];
+					var modifiers = getModifiers(element);
+					var name =  modifiers.name;
+
+					var tag = modifiers.tag ? modifiers.tag : (name in config.tags ? config.tags[name] : config.tags['default']);
+
 					var html_tag = typeof tag === 'object' && 'is' in tag ? tag.is : ( typeof tag === 'string' ? tag : 'div');
 					var content = typeof tag === 'object' && 'data' in tag ? tag.data : '';
+					var filename = _snakeCase(name);
 
-					data.content = element+' : '+( content.indexOf('(') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
+					data.content = filename+' : '+( content.indexOf('(') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
 
-					data.scss = '&__'+element+'{  }';
+					data.scss = '&__'+filename+'{  }';
 
 					if( typeof tag === 'object' && 'html' in tag)
-						data.elements = tag.html.replace(/{{ data/g, '{{ data.'+element).replace('<tag', '<'+html_tag).replace('</tag>', '</'+html_tag+'>').replace('{{ name }}', element);
+						data.elements = tag.html.replace(/{{ data/g, '{{ data.'+filename).replace('<tag', '<'+html_tag).replace('</tag>', '</'+html_tag+'>').replace('{{ name }}', filename);
 					else if( typeof tag === 'object' && 'innerHtml' in tag)
-						data.elements = '<'+html_tag+' element="'+element+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+element)+'</'+html_tag+'>';
+						data.elements = '<'+html_tag+' element="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename)+'</'+html_tag+'>';
 					else
-						data.elements = '<'+html_tag+' element="'+element+'">{{ data.'+element+'|raw }}</'+html_tag+'>';
+						data.elements = '<'+html_tag+' element="'+filename+'">{{ data.'+filename+'|raw }}</'+html_tag+'>';
 				}
 
 				resolve(data);
@@ -343,19 +441,30 @@ var wml = (function (config) {
 		});
 	}
 
-
 	function generateData(elements){
 
-		if( elements !== null && Array.isArray(elements) )
-		{
-			return Promise.all(elements.map(function(element){
-				return getData(element);
-			})).then(function(data){
-				return processData(data)
-			});
+		if( isDefined(elements) && isIterable(elements) ) {
+
+			if( isArray(elements) ) {
+
+				return Promise.all(elements.map(function(element){
+					return getData(element);
+				})).then(function(data){
+					return processData(data, true)
+				});
+			}
+			else{
+
+				return Promise.all(Object.keys(elements).map(function(key){
+					return getData(elements[key]);
+				})).then(function(data){
+					return processData(data, false)
+				});
+			}
 		}
-		else
-		{
+
+		else {
+
 			return Promise.resolve({
 				scss: '',
 				elements: '',
@@ -368,9 +477,12 @@ var wml = (function (config) {
 
 	function writeFile(data){
 
-		if( Array.isArray(data) )
+		if( Array.isArray(data) ) {
+
 			return writeFiles(data);
-		else
+		}
+		else {
+
 			return new Promise(function (resolve, reject) {
 
 				var filePath = Object.keys(data)[0];
@@ -379,24 +491,30 @@ var wml = (function (config) {
 				filePath = config.outputPath + filePath;
 
 				try {
+
 					var dirname = path.dirname(filePath);
 					mkdir.sync(dirname);
 
-					if( !fs.existsSync(filePath) )
+					var file_content = fs.existsSync(filePath)? fs.readFileSync(filePath, 'utf8') : '';
+
+					if( content.length > file_content.length )
 					{
 						fs.writeFileSync(filePath, content);
 						resolve(true);
 					}
-					else
-					{
+					else {
+
 						resolve(false);
 					}
 				}
 				catch (e) {
+
 					reject(e);
 				}
 			});
+		}
 	}
+
 
 	function writeFiles(structure){
 
@@ -415,6 +533,7 @@ var wml = (function (config) {
 			}
 		});
 	}
+
 });
 
 

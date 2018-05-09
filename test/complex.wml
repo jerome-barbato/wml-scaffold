@@ -1,41 +1,41 @@
 layout:
   - default:
-    - header:
-      - logo
-      - links:
-        - link|loop(2):
-          - sublink|loop
-    - nav:
-      - switch
-      - search
+    - $header:
+      - $logo
+      - $header nav|extend(nav)
+    - $menu:
+      - $switch
+      - $search
       - close
-      - links|loop:
+      - $nav
       - address
       - phone
-    - footer:
-       - contact
-       - social
-       - newsletter
-       - globalise
-       - links
+    - $footer:
+      - $contact
+      - $social
+      - $newsletter
+      - $globalise
+      - $link|loop(2)
+
   - catalog:
-    - header:
-    - nav:
-    - footer:
-    - heading:
-      - breadcrumb
+    - $header
+    - $nav
+    - $heading:
+      - $breadcrumb
       - title
       - text
-    - acquisition:
+    - $acquisition:
       - title
       - text
       - url
+    - $footer
+
   - article:
-    - header:
-    - nav:
-    - footer:
-    - heading:
-    - element|type(fulltext):
+    - $header
+    - $nav
+    - $footer
+    - $heading
+    - $fulltext:
         - title
         - subtitle
         - text
@@ -43,150 +43,144 @@ layout:
           - number
           - unit
           - label
-    - element|type(halftext):
+    - $halftext:
       - img
       - title
       - subtitle
       - text
-      - link
-      - cta
+      - cta|tag(a)
       - textPosition
-    - element|type(slider):
+    - slider:
       - title
-      - link
-      - slider:
-        - slide|loop:
-          - title
-          - text
-          - cta
-    - element|type(thirdtext):
+      - cta|tag(a)
+      - slide|tag(slide)|loop:
+        - subtitle
+        - img
+        - text
+        - url
+    - $thirdtext:
       - title
       - text
-      - link
+      - cta|tag(a)
       - img
-      - keyfigure:
-    - testimonies:
-    - push|loop(3):
-    - focus:
-    - quote:
+      - $keyfigure
+    - $testimonies:
+      - title
+      - slider|tag(slider):
+        - $testimony|tag(slide)|loop:
+          - theme
+          - video
+          - name
+          - job
+          - infos:
+            - context
+            - profile
+            - area
+            - type
+        - prev
+        - next
+      - cta|tag(a)
+    - $push|loop(3):
+      - img
+        - title
+        - text
+        - url
+    - $focus:
+      - visual:
+        - desktop
+        - mobile
+      - text
+      - cta
+    - $quote:
       - title
       - text
       - name
       - job
-    - caseStudies:
+    - $case studies:
       - title
       - cta
-      - slider:
-        - slide|loop:
-          - title
-          - excerpt
-          - url
-    - newsBlock:
-    - element|type(videofull):
+      - slider|tag(slider):
+        - $case study|tag(slide)|loop
+    - $news block:
+      - title
+      - $news|loop(3):
+        - link
+        - thumbnail
+        - title
+        - category
+        - categoryLink
+    - $videofull:
       - title
       - subtitle
-      - video|type(embed,mp4)
+      - video
       - poster
-    - element|type(keyfigures):
+    - $keyfigures:
       - title
-      - keyfigure|loop(4):
-    - element|type(rebound):
+      - $keyfigure|loop(4)
+    - $rebound:
       - title
-      - slider:
-         - slide|loop
+      - slider|tag(slider):
+        - slide|tag(slide)|loop:
           - cta
-    - element|type(anchor):
+
+    - $anchor:
       - title
       - name
 
+
 home:
   - layout: default
-  - hero:
-    - visual|type(img,video)
+  - $hero:
+    - visual:
+      - img
+      - video
     - block|loop(2):
-      - title|type(small)
-      - title|type(big)
+      - title small
+      - title big
       - text
       - cta
     - globalise:
       - cta
-      - popin:
+      - $popin:
         - close
         - content:
-          - logo:
-            - img
-            - baseline
-            - url
+          - $logo
           - wysiwyg
           - cta
-    - scrollDown
-  - company:
+    - scrollDown|tag(a)
+  - $company:
     - title
     - block|loop(3):
       - img
-      - title
+      - subtitle
       - text
       - cta
-  - aboutUs:
+  - $about us:
     - title
     - subtitle
     - wysiwyg
-    - links|loop(4)
-  - testimonies:
-    - title
-    - slider:
-      - slide|loop:
-        - theme
-        - video
-        - name
-        - job
-        - infos:
-          - context
-          - profile
-          - area
-          - type
-      - prev
-      - next
-    - link
-  - manager:
+    - cta|tag(a)
+  - $testimonies
+  - $manager:
     - title
     - detail|loop(5):
       - img
-      - title
+      - subtitle
       - url
-  - focus:
-    - visual:
-      - desktop
-      - mobile
-    - text
-    - cta
-  - newsBlock:
-    - title
-    - news|loop(3):
-      - link
-      - thumbnail
-      - title
-      - category
-      - categoryLink
+  - $focus
+  - $news block
 
-catalogList:
+catalog list:
   - layout: catalog
-  - img
-  - link|loop:
-
-catalogGrid:
-  - layout: catalog
-  - push|loop:
+  - $categories:
     - img
-    - title
-    - text
-    - url
+    - $link|loop
 
-catalogSlider:
+catalog grid:
+  - layout: catalog
+  - $push|loop
+
+catalog slider:
   - layout: catalog
   - slider:
     - slide|loop:
-      - img
-      - title
-      - text
-      - url
