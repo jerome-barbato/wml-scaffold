@@ -1,0 +1,9 @@
+{
+  "key": "",
+  "label": "Video",
+  "name": "video",
+  "type": "file",
+  "return_format": "url",
+  "library": "all",
+  "mime_types": "mp4"
+}

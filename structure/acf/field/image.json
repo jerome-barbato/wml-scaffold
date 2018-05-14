@@ -1,0 +1,9 @@
+{
+  "key": "",
+  "label": "Image",
+  "name": "image",
+  "type": "image",
+  "return_format": "id",
+  "preview_size": "thumbnail",
+  "library": "all"
+}

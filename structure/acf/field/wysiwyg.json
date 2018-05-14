@@ -1,0 +1,10 @@
+{
+  "key": "",
+  "label": "Wysiwyg",
+  "name": "wysiwyg",
+  "type": "wysiwyg",
+  "tabs": "all",
+  "toolbar": "full",
+  "media_upload": 0,
+  "delay": 1
+}

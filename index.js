@@ -10,11 +10,14 @@ var wml = (function (config) {
 
 	wml.files = [];
 
-
 	config = Object.assign({
 
 		outputPath: '.',
-		type: 'vue-twig-scss'
+		acf: true,
+		type: 'vue-twig-scss',
+		alias: {
+			'img': 'image'
+		}
 
 	}, config);
 
@@ -165,24 +168,22 @@ var wml = (function (config) {
 			scss: [],
 			elements: [],
 			content: [],
-			components: []
+			components: [],
+			fields: []
 		};
-
 
 		data.forEach(function(key){
 
 			Object.keys(_data).forEach(function(_key) {
-				if (key[_key].length)
+				if (isIterable(key[_key]) || (isString(key[_key]) && key[_key].length))
 					_data[_key].push(key[_key]);
 			});
 		});
 
-		if( indent ){
+		if( indent )
 			_data.content = format(_data.content, ',\n\t');
-		}
-		else {
+		else
 			_data.content = format(_data.content, ',');
-		}
 
 		_data.scss = format(_data.scss, '', '\n\t');
 		_data.elements = format(_data.elements, '', '\n\t');
@@ -218,8 +219,8 @@ var wml = (function (config) {
 	function getModifiers(key){
 
 		var definition = key.split('|');
+		var name = definition[0].replace('$', '')+'e';
 
-		var name = definition[0].replace('$', '');
 		var modifiers = {
 			name: name,
 			type: _snakeCase(name),
@@ -228,11 +229,14 @@ var wml = (function (config) {
 			tag: false
 		};
 
+		if( modifiers.type in config.alias )
+			modifiers.type = config.alias[modifiers.type];
+
 		definition.forEach(function(filter){
 
 			filter = filter.replace(')','').split('(');
 
-			if( filter[0] in modifiers )
+			if( filter[0] in modifiers && filter[0] !== 'name' )
 				modifiers[filter[0]] = filter.length > 1 ? filter[1] : true;
 		});
 
@@ -240,6 +244,56 @@ var wml = (function (config) {
 			modifiers.loop = 2;
 
 		return modifiers;
+	}
+
+
+	function ucFirst(str) {
+		if (isString(str) && str.length > 0) {
+			return str[0].toUpperCase() + str.substring(1);
+		} else {
+			return str;
+		}
+	}
+
+
+	function getUniqid( prefix, more_entropy ){
+
+		if (typeof prefix === 'undefined') {
+			prefix = "";
+		}
+
+		var retId;
+		var formatSeed = function (seed, reqWidth) {
+			seed = parseInt(seed, 10).toString(16); // to hex str
+			if (reqWidth < seed.length) { // so long we split
+				return seed.slice(seed.length - reqWidth);
+			}
+			if (reqWidth > seed.length) { // so short we pad
+				return Array(1 + (reqWidth - seed.length)).join('0') + seed;
+			}
+			return seed;
+		};
+
+		// BEGIN REDUNDANT
+		if (!this.php_js) {
+			this.php_js = {};
+		}
+		// END REDUNDANT
+		if (!this.php_js.uniqidSeed) { // init seed with big random int
+			this.php_js.uniqidSeed = Math.floor(Math.random() * 0x75bcd15);
+		}
+		this.php_js.uniqidSeed++;
+
+		retId = prefix; // start with prefix, add current milliseconds hex string
+		retId += formatSeed(parseInt(new Date().getTime() / 1000, 10), 8);
+		retId += formatSeed(this.php_js.uniqidSeed, 5); // add seed hex string
+		if (more_entropy) {
+			// for more entropy we add a float lower to 10
+			retId += (Math.random() * 10).toFixed(8).toString();
+		}
+
+		return retId;
+
 	}
 
 
@@ -269,7 +323,7 @@ var wml = (function (config) {
 
 						var files = [];
 
-						var tag = modifiers.tag ? modifiers.tag : ( name in config.tags ? config.tags[name] : config.tags['default'] );
+						var tag = modifiers.tag ? modifiers.tag : ( modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default'] );
 						tag = isObject(tag) && 'is' in tag ? tag.is : tag;
 
 						structure_files.forEach(function(structure_file){
@@ -296,6 +350,21 @@ var wml = (function (config) {
 							files.push(file);
 						});
 
+						if( config.acf ) {
+
+							//generate acf
+							var component = JSON.parse(fs.readFileSync('structure/acf/component.json', 'utf8'));
+							component.key = getUniqid('group_');
+							component.title = ucFirst(name);
+							component.fields = data.fields;
+
+							var file = {};
+							var filepath = '/acf-json/' + component.key + '.json';
+							file[filepath] = JSON.stringify(component);
+
+							files.push(file);
+						}
+
 						addFiles(files);
 
 						resolve({name:name, files:files, modifiers:modifiers});
@@ -315,7 +384,6 @@ var wml = (function (config) {
 
 
 	function addFiles(files){
-
 
 		wml.files = wml.files.concat(files);
 	}
@@ -354,7 +422,8 @@ var wml = (function (config) {
 				scss: '',
 				elements: '',
 				content: '',
-				components: ''
+				components: '',
+				fields: {}
 			};
 
 			if( isIterable(element) || isComponent(element) ) {
@@ -375,6 +444,14 @@ var wml = (function (config) {
 
 						data.components = components.join('\n\t');
 
+						// generate acf
+						var field = JSON.parse(fs.readFileSync( 'structure/acf/field/component.json', 'utf8'));
+						field.key = getUniqid('field_');
+						field.label = ucFirst(component.modifiers.name).replace('_', ' ');
+						field.name = component.modifiers.name;
+
+						data.fields = field;
+
 						resolve(data);
 					});
 				}
@@ -382,18 +459,18 @@ var wml = (function (config) {
 
 					generateData(element).then(function(data){
 
-						if( isObject(element) )
-						{
+						if( isObject(element) ) {
+
 							var modifiers = getModifiers(Object.keys(element)[0]);
 							var name =  modifiers.name;
 
-							if( data.components.length )
-							{
+							if( data.components.length ) {
+
 								data.elements += data.components;
 								data.components = '';
 							}
 
-							var tag = modifiers.tag ? modifiers.tag : (name in config.tags ? config.tags[name] : config.tags['default']);
+							var tag = modifiers.tag ? modifiers.tag : (modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default']);
 							var html_tag = typeof tag === 'object' && 'is' in tag ? tag.is : ( typeof tag === 'string' ? tag : 'div');
 
 							var elements = '<'+html_tag+' element="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
@@ -404,6 +481,15 @@ var wml = (function (config) {
 								elements = '\n\t'+elements;
 
 							data.elements = elements;
+
+							// generate acf
+							var field = JSON.parse(fs.readFileSync( 'structure/acf/field/group.json', 'utf8'));
+							field.key = getUniqid('field_');
+							field.label = ucFirst(name).replace('_', ' ');
+							field.name = name;
+							field.sub_fields = data.fields;
+
+							data.fields = field;
 						}
 
 						resolve(data)
@@ -418,7 +504,7 @@ var wml = (function (config) {
 					var modifiers = getModifiers(element);
 					var name =  modifiers.name;
 
-					var tag = modifiers.tag ? modifiers.tag : (name in config.tags ? config.tags[name] : config.tags['default']);
+					var tag = modifiers.tag ? modifiers.tag : (modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default']);
 
 					var html_tag = typeof tag === 'object' && 'is' in tag ? tag.is : ( typeof tag === 'string' ? tag : 'div');
 					var content = typeof tag === 'object' && 'data' in tag ? tag.data : '';
@@ -434,6 +520,14 @@ var wml = (function (config) {
 						data.elements = '<'+html_tag+' element="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename)+'</'+html_tag+'>';
 					else
 						data.elements = '<'+html_tag+' element="'+filename+'">{{ data.'+filename+'|raw }}</'+html_tag+'>';
+
+					// generate acf
+					var field = JSON.parse(fs.readFileSync( 'structure/acf/field/' + (fs.existsSync('structure/acf/field/'+modifiers.type+'.json') ? modifiers.type : 'default' ) + '.json', 'utf8'));
+					field.key = getUniqid('field_');
+					field.label = ucFirst(name).replace('_', ' ');
+					field.name = name;
+
+					data.fields = field;
 				}
 
 				resolve(data);
@@ -469,7 +563,8 @@ var wml = (function (config) {
 				scss: '',
 				elements: '',
 				content: '',
-				components: ''
+				components: '',
+				fields: []
 			});
 		}
 	}
@@ -495,7 +590,7 @@ var wml = (function (config) {
 					var dirname = path.dirname(filePath);
 					mkdir.sync(dirname);
 
-					var file_content = fs.existsSync(filePath)? fs.readFileSync(filePath, 'utf8') : '';
+					var file_content = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
 
 					if( content.length > file_content.length )
 					{

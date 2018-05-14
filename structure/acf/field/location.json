@@ -1,0 +1,6 @@
+{
+  "key": "",
+  "label": "Location",
+  "name": "location",
+  "type": "google_map"
+}

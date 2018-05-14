@@ -18,7 +18,6 @@ layout:
       - $link|loop(2)
 
   - catalog:
-    - $header
     - $nav
     - $heading:
       - $breadcrumb
@@ -31,7 +30,6 @@ layout:
     - $footer
 
   - article:
-    - $header
     - $nav
     - $footer
     - $heading
@@ -82,9 +80,9 @@ layout:
       - cta|tag(a)
     - $push|loop(3):
       - img
-        - title
-        - text
-        - url
+      - title
+      - text
+      - url
     - $focus:
       - visual:
         - desktop
