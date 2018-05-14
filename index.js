@@ -219,7 +219,7 @@ var wml = (function (config) {
 	function getModifiers(key){
 
 		var definition = key.split('|');
-		var name = definition[0].replace('$', '')+'e';
+		var name = definition[0].replace('$', '');
 
 		var modifiers = {
 			name: name,
