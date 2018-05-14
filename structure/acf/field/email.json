@@ -2,5 +2,5 @@
   "key": "",
   "label": "Text",
   "name": "text",
-  "type": "textarea"
+  "type": "email"
 }

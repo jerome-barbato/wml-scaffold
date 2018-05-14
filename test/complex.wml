@@ -48,10 +48,10 @@ layout:
       - text
       - cta|tag(a)
       - textPosition
-    - slider:
+    - $slider:
       - title
       - cta|tag(a)
-      - slide|tag(slide)|loop:
+      - slide|loop:
         - subtitle
         - img
         - text
@@ -64,7 +64,7 @@ layout:
       - $keyfigure
     - $testimonies:
       - title
-      - slider|tag(slider):
+      - slider:
         - $testimony|tag(slide)|loop:
           - theme
           - video
@@ -97,7 +97,7 @@ layout:
     - $case studies:
       - title
       - cta
-      - slider|tag(slider):
+      - slider:
         - $case study|tag(slide)|loop
     - $news block:
       - title
@@ -106,7 +106,7 @@ layout:
         - thumbnail
         - title
         - category
-        - categoryLink
+        - cta
     - $videofull:
       - title
       - subtitle
@@ -117,8 +117,8 @@ layout:
       - $keyfigure|loop(4)
     - $rebound:
       - title
-      - slider|tag(slider):
-        - slide|tag(slide)|loop:
+      - slider:
+        - slide|loop:
           - cta
 
     - $anchor:

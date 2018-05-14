@@ -23,7 +23,7 @@ function test(input, output, done) {
 	wml({outputPath:'./export'})
 		.process(input)
 		.then(function(result) {
-			expect(output).to.eql(result);
+           expect(output).to.eql(typeof result);
 			done();
 		})
 		.catch(function(error) {
@@ -33,50 +33,10 @@ function test(input, output, done) {
 
 describe('Test for pages', function() {
 
-	/*it('Test write file', function(done) {
-		test(
-			{type:'write', data:[{'/test.twig':'<div block="Test"></div>'}]},
-			[true],
-			done
-		);
-    });
-
-	it('Test write file in subfolder', function(done) {
-		test(
-			{type:'write', data:[{'/asset/component/test/test.twig':'<div block="Test"></div>'}]},
-			[true],
-			done
-		);
-    });
-
-	it('Test write files', function(done) {
-		test(
-			{type:'write', data:[{'/asset/component/test/test.twig':'<div block="Test"></div>'},{'/asset/component/test/test.scss':'.Test{  }'}]},
-			[true, true],
-			done
-		);
-    });
-
-    it('Test load simple structure', function(done) {
-        test(
-        	{type:'load', data:'./test/simple.wml'},
-	        {simple:null},
-	        done
-        );
-    });
-
-    it('Test simple generation', function(done) {
-        test(
-        	'./test/simple.wml',
-	        [[true]],
-	        done
-        );
-    });*/
-
     it('Test complex generation', function(done) {
         test(
         	'./test/complex.wml',
-	        [[true]],
+	        'object',
 	        done
         );
     });

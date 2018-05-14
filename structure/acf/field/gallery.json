@@ -1,0 +1,9 @@
+{
+  "key": "",
+  "label": "Gallery",
+  "name": "gallery",
+  "type": "gallery",
+  "insert": "append",
+  "library": "all",
+  "mime_types": ""
+}

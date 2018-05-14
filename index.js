@@ -8,15 +8,21 @@ var _snakeCase = require('lodash.snakecase');
 
 var wml = (function (config) {
 
+	var self = this;
+
 	wml.files = [];
+	wml.uniqId_list = {};
 
 	config = Object.assign({
-
 		outputPath: '.',
-		acf: true,
+		acf: {
+			path: 'structure/acf',
+			ignore: ['close', 'prev', 'next', 'next']
+		},
 		type: 'vue-twig-scss',
 		alias: {
-			'img': 'image'
+			'img': 'image',
+			'description': 'text'
 		}
 
 	}, config);
@@ -24,14 +30,14 @@ var wml = (function (config) {
 
 	wml.prototype.process = function(args){
 
-		return loadTags()
+		return self.loadTags()
 			.then(function(tags){
 				config.tags = tags;
-				return loadFile(args);
+				return self.loadFile(args);
 			})
-			.then(generateFiles)
+			.then(self.generateFiles)
 			.then(function(){
-				return writeFiles(wml.files);
+				return self.writeFiles(wml.files);
 			})
 
 	};
@@ -44,7 +50,7 @@ var wml = (function (config) {
 	}
 
 
-	function loadTags(){
+	wml.prototype.loadTags = function(){
 
 		return new Promise(function (resolve, reject) {
 
@@ -56,30 +62,30 @@ var wml = (function (config) {
 				reject(e);
 			}
 		});
-	}
+	};
 
 
-	function generateFiles(structure){
+	wml.prototype.generateFiles = function(structure){
 
 		return Promise.all(Object.keys(structure).map(function(key){
 			if( key === 'layout' )
-				return generateLayout(structure[key]);
+				return self.generateLayout(structure[key]);
 			else
-				return generatePage(key, structure[key]);
+				return self.generatePage(key, structure[key]);
 		}));
-	}
+	};
 
 
-	function generateLayout(structure){
+	wml.prototype.generateLayout = function(structure){
 
 		return Promise.all(structure.map(function(layout){
 			var name = Object.keys(layout)[0];
-			return generatePage(name, layout[name], 'layout');
+			return self.generatePage(name, layout[name], 'layout');
 		}));
-	}
+	};
 
 
-	function generatePage(name, structure, type){
+	wml.prototype.generatePage = function(name, structure, type){
 
 		return new Promise(function (resolve, reject) {
 
@@ -146,7 +152,7 @@ var wml = (function (config) {
 
 				if( isArray(structure) ) {
 
-					generateComponents(structure).then(function(){
+					self.generateComponents(structure).then(function(){
 						resolve(files);
 					}).catch(reject);
 				}
@@ -159,7 +165,7 @@ var wml = (function (config) {
 				reject(e);
 			}
 		});
-	}
+	};
 
 
 	function processData(data, indent){
@@ -208,15 +214,15 @@ var wml = (function (config) {
 	}
 
 
-	function generateComponents(components){
+	wml.prototype.generateComponents = function(components){
 
 		return Promise.all(components.map(function(component){
-			return generateComponent(component);
+			return self.generateComponent(component);
 		}));
-	}
+	};
 
 
-	function getModifiers(key){
+	wml.prototype.getModifiers = function(key){
 
 		var definition = key.split('|');
 		var name = definition[0].replace('$', '');
@@ -244,7 +250,7 @@ var wml = (function (config) {
 			modifiers.loop = 2;
 
 		return modifiers;
-	}
+	};
 
 
 	function ucFirst(str) {
@@ -256,7 +262,21 @@ var wml = (function (config) {
 	}
 
 
-	function getUniqid( prefix, more_entropy ){
+	function getId( prefix, key ){
+
+		if( key in wml.uniqId_list )
+			return wml.uniqId_list[key];
+
+		var id = getUniqid( prefix )
+
+		wml.uniqId_list[key] = id;
+
+		return id;
+
+	}
+
+
+	function getUniqid( prefix ){
 
 		if (typeof prefix === 'undefined') {
 			prefix = "";
@@ -287,24 +307,20 @@ var wml = (function (config) {
 		retId = prefix; // start with prefix, add current milliseconds hex string
 		retId += formatSeed(parseInt(new Date().getTime() / 1000, 10), 8);
 		retId += formatSeed(this.php_js.uniqidSeed, 5); // add seed hex string
-		if (more_entropy) {
-			// for more entropy we add a float lower to 10
-			retId += (Math.random() * 10).toFixed(8).toString();
-		}
 
 		return retId;
 
 	}
 
 
-	function generateComponent(component){
+	wml.prototype.generateComponent = function(component){
 
 		return new Promise(function (resolve, reject) {
 
 			try {
 
 				var key = isObject(component) ? Object.keys(component)[0] : component;
-				var modifiers = getModifiers(key);
+				var modifiers = self.getModifiers(key);
 				var name = modifiers.name;
 				var filename = _snakeCase(name);
 
@@ -319,7 +335,7 @@ var wml = (function (config) {
 
 					var elements = isObject(component) ? component[key] : false;
 
-					generateData(elements).then(function(data) {
+					self.generateData(elements).then(function(data) {
 
 						var files = [];
 
@@ -350,13 +366,14 @@ var wml = (function (config) {
 							files.push(file);
 						});
 
-						if( config.acf ) {
+						if( config.acf && data.fields.length ) {
 
 							//generate acf
-							var component = JSON.parse(fs.readFileSync('structure/acf/component.json', 'utf8'));
-							component.key = getUniqid('group_');
+							var component = JSON.parse(fs.readFileSync(config.acf.path+'/component.json', 'utf8'));
+							component.key = getId('group_', name);
 							component.title = ucFirst(name);
 							component.fields = data.fields;
+							component.modified = Math.round(Date.now()/1000);
 
 							var file = {};
 							var filepath = '/acf-json/' + component.key + '.json';
@@ -380,7 +397,7 @@ var wml = (function (config) {
 				reject(e);
 			}
 		});
-	}
+	};
 
 
 	function addFiles(files){
@@ -414,7 +431,7 @@ var wml = (function (config) {
 	}
 
 
-	function getData(element){
+	wml.prototype.getData = function(element){
 
 		return new Promise(function (resolve, reject) {
 
@@ -430,7 +447,7 @@ var wml = (function (config) {
 
 				if( isComponent(element) ) {
 
-					generateComponent(element).then(function(component){
+					self.generateComponent(element).then(function(component){
 
 						var components = [];
 
@@ -445,23 +462,18 @@ var wml = (function (config) {
 						data.components = components.join('\n\t');
 
 						// generate acf
-						var field = JSON.parse(fs.readFileSync( 'structure/acf/field/component.json', 'utf8'));
-						field.key = getUniqid('field_');
-						field.label = ucFirst(component.modifiers.name).replace('_', ' ');
-						field.name = component.modifiers.name;
-
-						data.fields = field;
+						data.fields = self.generateACFComponent('component', component.modifiers.name);
 
 						resolve(data);
 					});
 				}
 				else{
 
-					generateData(element).then(function(data){
+					self.generateData(element).then(function(data){
 
 						if( isObject(element) ) {
 
-							var modifiers = getModifiers(Object.keys(element)[0]);
+							var modifiers = self.getModifiers(Object.keys(element)[0]);
 							var name =  modifiers.name;
 
 							if( data.components.length ) {
@@ -483,11 +495,11 @@ var wml = (function (config) {
 							data.elements = elements;
 
 							// generate acf
-							var field = JSON.parse(fs.readFileSync( 'structure/acf/field/group.json', 'utf8'));
-							field.key = getUniqid('field_');
-							field.label = ucFirst(name).replace('_', ' ');
-							field.name = name;
-							field.sub_fields = data.fields;
+							var field = self.generateACFComponent('group', name);
+							field.sub_fields = data.fields[0];
+
+							if( modifiers.loop )
+								field.type = 'repeater';
 
 							data.fields = field;
 						}
@@ -501,7 +513,7 @@ var wml = (function (config) {
 
 				if( isString(element) && element !== 'layout' )
 				{
-					var modifiers = getModifiers(element);
+					var modifiers = self.getModifiers(element);
 					var name =  modifiers.name;
 
 					var tag = modifiers.tag ? modifiers.tag : (modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default']);
@@ -521,28 +533,38 @@ var wml = (function (config) {
 					else
 						data.elements = '<'+html_tag+' element="'+filename+'">{{ data.'+filename+'|raw }}</'+html_tag+'>';
 
-					// generate acf
-					var field = JSON.parse(fs.readFileSync( 'structure/acf/field/' + (fs.existsSync('structure/acf/field/'+modifiers.type+'.json') ? modifiers.type : 'default' ) + '.json', 'utf8'));
-					field.key = getUniqid('field_');
-					field.label = ucFirst(name).replace('_', ' ');
-					field.name = name;
-
-					data.fields = field;
+					data.fields = self.generateACFComponent(modifiers.type, name);
 				}
 
 				resolve(data);
 			}
 		});
-	}
+	};
 
-	function generateData(elements){
+
+	wml.prototype.generateACFComponent = function(type, name){
+
+		if( !config.acf || ( 'ignore' in config.acf && isArray(config.acf.ignore) && config.acf.ignore.indexOf(type) !== -1 ) )
+			return [];
+
+		var field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
+
+		field.key = getUniqid('field_');
+		field.label = ucFirst(name).replace('_', ' ');
+		field.name = name;
+
+		return field;
+	};
+
+
+	wml.prototype.generateData = function(elements){
 
 		if( isDefined(elements) && isIterable(elements) ) {
 
 			if( isArray(elements) ) {
 
 				return Promise.all(elements.map(function(element){
-					return getData(element);
+					return self.getData(element);
 				})).then(function(data){
 					return processData(data, true)
 				});
@@ -550,7 +572,7 @@ var wml = (function (config) {
 			else{
 
 				return Promise.all(Object.keys(elements).map(function(key){
-					return getData(elements[key]);
+					return self.getData(elements[key]);
 				})).then(function(data){
 					return processData(data, false)
 				});
@@ -567,14 +589,14 @@ var wml = (function (config) {
 				fields: []
 			});
 		}
-	}
+	};
 
 
-	function writeFile(data){
+	wml.prototype.writeFile = function(data){
 
 		if( Array.isArray(data) ) {
 
-			return writeFiles(data);
+			return self.writeFiles(data);
 		}
 		else {
 
@@ -608,16 +630,16 @@ var wml = (function (config) {
 				}
 			});
 		}
-	}
+	};
 
 
-	function writeFiles(structure){
+	wml.prototype.writeFiles = function(structure){
 
-		return Promise.all(structure.map(writeFile));
-	}
+		return Promise.all(structure.map(self.writeFile));
+	};
 
 
-	function loadFile(file){
+	wml.prototype.loadFile = function(file){
 
 		return new Promise(function (resolve, reject) {
 			try {
@@ -627,7 +649,7 @@ var wml = (function (config) {
 				reject(e);
 			}
 		});
-	}
+	};
 
 });
 
