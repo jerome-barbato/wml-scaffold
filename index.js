@@ -22,12 +22,14 @@ var wml = (function (config) {
 		type: 'vue-twig-scss',
 		alias: {
 			'description': 'text',
-			'breadcrumb': 'nav'
+			'breadcrumb': 'nav',
+			'poster': 'image'
 		},
 		rewrite: {
 			'img': 'image',
 			'email': 'mail',
-			'url': 'link'
+			'url': 'link',
+			'prev': 'previous'
 		},
 		components: ['slider', 'slide']
 

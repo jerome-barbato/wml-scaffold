@@ -53,9 +53,15 @@ scroll_down:
   innerHtml: ""
 
 download: button
-next: button
-prev: button
-previous: button
+
+next:
+  is: button
+  data: false
+
+previous:
+  is: button
+  data: false
+
 button: button
 header: header
 heading: header
@@ -69,6 +75,15 @@ link:
 
 number:
   data: 85
+
+category:
+  data: 'My category'
+
+name:
+  data: 'Simon'
+
+job:
+  data: 'Architect'
 
 address:
   data: '22 boulevard Stalingrad<br/>Nice'
