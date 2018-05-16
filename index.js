@@ -334,10 +334,12 @@ var wml = (function (config) {
 		if (!this.php_js) {
 			this.php_js = {};
 		}
+
 		// END REDUNDANT
 		if (!this.php_js.uniqidSeed) { // init seed with big random int
 			this.php_js.uniqidSeed = Math.floor(Math.random() * 0x75bcd15);
 		}
+
 		this.php_js.uniqidSeed++;
 
 		retId = prefix; // start with prefix, add current milliseconds hex string
@@ -592,7 +594,7 @@ var wml = (function (config) {
 
 	wml.prototype.generateACFComponent = function(type, name){
 
-		if( !config.acf || ( 'ignore' in config.acf && isArray(config.acf.ignore) && config.acf.ignore.indexOf(type) !== -1 ) )
+		if( !config.acf || ( hasKey(config.acf, 'ignore') && hasKey(config.acf.ignore, type) ) )
 			return [];
 
 		var field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
@@ -607,7 +609,7 @@ var wml = (function (config) {
 
 	wml.prototype.generateACFGroup = function(type, name){
 
-		if( !config.acf || ( 'ignore' in config.acf && !hasKey(config.acf.ignore, type) ) )
+		if( !config.acf || ( hasKey(config.acf, 'ignore') && hasKey(config.acf.ignore, type) ) )
 			return [];
 
 		var group = JSON.parse(fs.readFileSync( config.acf.path+'/' + (fs.existsSync(config.acf.path+'/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
@@ -616,7 +618,7 @@ var wml = (function (config) {
 		group.title = ucFirst(name).replace('_', ' ');
 		group.modified = Math.round(Date.now()/1000);
 
-		if( type === 'page')
+		if( type === 'page' )
 			group.fields[0].key = getId('field_', 'layout'+name);
 
 		return group;
