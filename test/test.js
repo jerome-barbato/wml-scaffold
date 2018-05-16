@@ -23,7 +23,7 @@ function test(input, output, done) {
 	wml({outputPath:'./export'})
 		.process(input)
 		.then(function(result) {
-           expect(output).to.eql(typeof result);
+           expect(output).to.eql(result);
 			done();
 		})
 		.catch(function(error) {
@@ -36,7 +36,7 @@ describe('Test for pages', function() {
     it('Test complex generation', function(done) {
         test(
         	'./test/complex.wml',
-	        'object',
+	        true,
 	        done
         );
     });

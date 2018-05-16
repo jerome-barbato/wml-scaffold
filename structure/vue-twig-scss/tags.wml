@@ -20,7 +20,7 @@ icon:
 
 cta:
   is: button
-  data: "{text:'Action', link:''}"
+  data: "{text:'Action', link:'#'}"
   html: '<tag element="cta" href="{{ data.link }}">{{ data.text }}</tag>'
 
 media:
@@ -41,7 +41,17 @@ image:
   data: "asset('/tmp/placeholder.jpg')"
 
 article: article
-close: button
+
+close:
+  is: button
+  data: false
+  innerHtml: "{{ __('Close') }}"
+
+scroll_down:
+  is: button
+  data: false
+  innerHtml: ""
+
 download: button
 next: button
 prev: button
@@ -53,9 +63,24 @@ footer: footer
 grid: section
 project: article
 
-url:
+link:
   data: '#'
-  html: '<a href="{{ data }}"></a>'
+  html: '<a element="{{ name }}" href="{{ data }}"></a>'
+
+number:
+  data: 85
+
+address:
+  data: '22 boulevard Stalingrad<br/>Nice'
+
+phone:
+  data: '+33 00 11 22 33 44'
+
+mail:
+  data: 'no-reply@dev.fr'
+
+slide:
+  html: '<slide element="{{ name }}"></slide>'
 
 video:
   is: div
@@ -65,3 +90,7 @@ video:
 wysiwyg:
   is: div
   data: '<h2>Lorem Ipsum</h2><h3>dolor sit amet</h3><h4>consectetur adipiscing</h4><p>Fusce fermentum <b>metus neque</b>, eu <i>euismod risus</i> lacinia sed. Pellentesque ac ipsum at enim euismod tempor. In sem odio</p><p>vehicula at facilisis id, viverra nec risus. Sed facilisis diam nec lorem pulvinar, a porttitor justo molestie. Etiam non cursus ligula.</p>'
+
+text:
+  is: p
+  data: 'Fusce fermentum metus neque, eu euismod risus lacinia sed. Pellentesque ac ipsum at enim euismod tempor. In sem odio<br/>vehicula at facilisis id, viverra nec risus. Sed facilisis diam nec lorem pulvinar, a porttitor justo molestie. Etiam non cursus ligula.'

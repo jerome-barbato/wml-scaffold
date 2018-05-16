@@ -11,26 +11,36 @@ var wml = (function (config) {
 	var self = this;
 
 	wml.files = [];
-	wml.uniqId_list = {};
+	wml.uid = {};
 
 	config = Object.assign({
 		outputPath: '.',
 		acf: {
 			path: 'structure/acf',
-			ignore: ['close', 'prev', 'next', 'next']
+			ignore: ['close', 'prev', 'next', 'next', 'scroll_down']
 		},
 		type: 'vue-twig-scss',
 		alias: {
+			'description': 'text',
+			'breadcrumb': 'nav'
+		},
+		rewrite: {
 			'img': 'image',
-			'description': 'text'
-		}
+			'email': 'mail',
+			'url': 'link'
+		},
+		components: ['slider', 'slide']
 
 	}, config);
 
 
 	wml.prototype.process = function(args){
 
-		return self.loadTags()
+		return self.loadUniqID()
+			.then(function(uid){
+				wml.uid = uid;
+				return self.loadTags();
+			})
 			.then(function(tags){
 				config.tags = tags;
 				return self.loadFile(args);
@@ -39,7 +49,7 @@ var wml = (function (config) {
 			.then(function(){
 				return self.writeFiles(wml.files);
 			})
-
+			.then(self.writeUniqID)
 	};
 
 
@@ -50,10 +60,43 @@ var wml = (function (config) {
 	}
 
 
+	wml.prototype.loadUniqID = function(){
+
+		return new Promise(function (resolve, reject) {
+			try {
+				var filePath = '.uniqid';
+				if( fs.existsSync(filePath) ) {
+					var uid = yaml.safeLoad(fs.readFileSync(filePath, 'utf8'));
+					resolve(uid);
+				}
+				else {
+					resolve({});
+				}
+
+			} catch (e) {
+				reject(e);
+			}
+		});
+	};
+
+
+	wml.prototype.writeUniqID = function(){
+
+		return new Promise(function (resolve, reject) {
+			try {
+				fs.writeFileSync('.uniqid', JSON.stringify(wml.uid));
+				resolve(true);
+			}
+			catch (e) {
+				reject(e);
+			}
+		});
+	};
+
+
 	wml.prototype.loadTags = function(){
 
 		return new Promise(function (resolve, reject) {
-
 			try {
 				var tags = yaml.safeLoad(fs.readFileSync('structure/'+config.type+'/tags.wml', 'utf8'));
 				resolve(tags);
@@ -88,9 +131,7 @@ var wml = (function (config) {
 	wml.prototype.generatePage = function(name, structure, type){
 
 		return new Promise(function (resolve, reject) {
-
 			try {
-
 				if( !isDefined(type) )
 					type = 'page';
 
@@ -102,7 +143,6 @@ var wml = (function (config) {
 				var structure_files = fs.readdirSync(structure_path);
 
 				structure_files.forEach(function(structure_file){
-
 					var content = fs.readFileSync(structure_path+'/'+structure_file, 'utf8');
 
 					content = content
@@ -110,14 +150,11 @@ var wml = (function (config) {
 						.replace(/#{\$name}/g, name);
 
 					if( type === 'page' ) {
-
 						if( isArray(structure) && isObject(structure[0]) && 'layout' in structure[0]) {
-
 							var layout_name = _snakeCase(structure[0].layout);
 							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'layout/'+layout_name+'.twig\' %}\n');
 						}
 						else {
-
 							content = content.replace(/{% extends layout %}\r\n/, '');
 						}
 					}
@@ -125,13 +162,10 @@ var wml = (function (config) {
 					var components = [];
 
 					if( isArray(structure) ) {
-
 						structure.forEach(function(component){
-
 							var key = ( isObject(component) ? Object.keys(component)[0] : component).split('|');
 
 							if( key[0] !== 'layout') {
-
 								var component_name = _snakeCase(key[0]);
 								components.push("{% include 'component/"+component_name+".twig' %}");
 							}
@@ -148,16 +182,17 @@ var wml = (function (config) {
 					files.push(file);
 				});
 
+				var group = self.generateACFGroup('page', name);
+				files.push( createACFFile(group) );
+
 				addFiles(files);
 
 				if( isArray(structure) ) {
-
 					self.generateComponents(structure).then(function(){
 						resolve(files);
 					}).catch(reject);
 				}
 				else {
-
 					resolve(files);
 				}
 
@@ -181,7 +216,7 @@ var wml = (function (config) {
 		data.forEach(function(key){
 
 			Object.keys(_data).forEach(function(_key) {
-				if (isIterable(key[_key]) || (isString(key[_key]) && key[_key].length))
+				if (isObject(key[_key]) || ( (isString(key[_key]) || isArray(key[_key])) && key[_key].length))
 					_data[_key].push(key[_key]);
 			});
 		});
@@ -205,7 +240,6 @@ var wml = (function (config) {
 		var i = 1;
 
 		array.map(function(value){
-
 			formatted += ( isDefined(before) ? before : '') + value + (isDefined(after) && i < array.length ? after : '');
 			i++;
 		});
@@ -227,6 +261,9 @@ var wml = (function (config) {
 		var definition = key.split('|');
 		var name = definition[0].replace('$', '');
 
+		if( hasKey(config, 'rewrite') && hasKey(config.rewrite, name) )
+			name = config.rewrite[name];
+
 		var modifiers = {
 			name: name,
 			type: _snakeCase(name),
@@ -235,14 +272,14 @@ var wml = (function (config) {
 			tag: false
 		};
 
-		if( modifiers.type in config.alias )
+		if( hasKey(config, 'alias') &&  hasKey(config.alias, modifiers.type) )
 			modifiers.type = config.alias[modifiers.type];
 
 		definition.forEach(function(filter){
 
 			filter = filter.replace(')','').split('(');
 
-			if( filter[0] in modifiers && filter[0] !== 'name' )
+			if( hasKey(modifiers, filter[0]) && filter[0] !== 'name' )
 				modifiers[filter[0]] = filter.length > 1 ? filter[1] : true;
 		});
 
@@ -264,12 +301,12 @@ var wml = (function (config) {
 
 	function getId( prefix, key ){
 
-		if( key in wml.uniqId_list )
-			return wml.uniqId_list[key];
+		if( hasKey(wml.uid, prefix+key) )
+			return wml.uid[prefix+key];
 
-		var id = getUniqid( prefix )
+		var id = getUniqid( prefix );
 
-		wml.uniqId_list[key] = id;
+		wml.uid[prefix+key] = id;
 
 		return id;
 
@@ -278,9 +315,8 @@ var wml = (function (config) {
 
 	function getUniqid( prefix ){
 
-		if (typeof prefix === 'undefined') {
+		if ( !isDefined(prefix) )
 			prefix = "";
-		}
 
 		var retId;
 		var formatSeed = function (seed, reqWidth) {
@@ -339,8 +375,8 @@ var wml = (function (config) {
 
 						var files = [];
 
-						var tag = modifiers.tag ? modifiers.tag : ( modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default'] );
-						tag = isObject(tag) && 'is' in tag ? tag.is : tag;
+						var tag = modifiers.tag ? modifiers.tag : ( hasKey(config.tags, modifiers.type ) ? config.tags[modifiers.type] : config.tags['default'] );
+						tag = hasKey(tag, 'is') ? tag.is : (isString(tag) ? tag : 'div');
 
 						structure_files.forEach(function(structure_file){
 
@@ -348,7 +384,7 @@ var wml = (function (config) {
 							var content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
 
 							if( content.indexOf('<elements></elements>') !== -1 && data.content.length )
-								content =  '{% set data = {\n\t'+data.content+'\n} %}\n\n' + content;
+								content =  '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
 
 							content = content
 								.replace(/{{ name }}/g, camelCase(name))
@@ -368,18 +404,9 @@ var wml = (function (config) {
 
 						if( config.acf && data.fields.length ) {
 
-							//generate acf
-							var component = JSON.parse(fs.readFileSync(config.acf.path+'/component.json', 'utf8'));
-							component.key = getId('group_', name);
-							component.title = ucFirst(name);
-							component.fields = data.fields;
-							component.modified = Math.round(Date.now()/1000);
-
-							var file = {};
-							var filepath = '/acf-json/' + component.key + '.json';
-							file[filepath] = JSON.stringify(component);
-
-							files.push(file);
+							var group = self.generateACFGroup('component', name);
+							group.fields = data.fields;
+							files.push( createACFFile(group) );
 						}
 
 						addFiles(files);
@@ -405,9 +432,25 @@ var wml = (function (config) {
 		wml.files = wml.files.concat(files);
 	}
 
+	function createACFFile(item){
+
+		var file = {};
+		var filepath = '/acf-json/' + item.key + '.json';
+		file[filepath] = JSON.stringify(item);
+
+		return file;
+	}
+
 
 	function isObject(item){
 		return isDefined(item) && typeof item === 'object' && item.constructor === Object;
+	}
+
+	function hasKey(item, key){
+		if( isArray(item) )
+			return item.indexOf(key) !== -1;
+		else
+			return isObject(item) && (key in item);
 	}
 
 	function isArray(item){
@@ -460,8 +503,6 @@ var wml = (function (config) {
 							components.push("{% endfor %}");
 
 						data.components = components.join('\n\t');
-
-						// generate acf
 						data.fields = self.generateACFComponent('component', component.modifiers.name);
 
 						resolve(data);
@@ -477,24 +518,26 @@ var wml = (function (config) {
 							var name =  modifiers.name;
 
 							if( data.components.length ) {
-
 								data.elements += data.components;
 								data.components = '';
 							}
 
-							var tag = modifiers.tag ? modifiers.tag : (modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default']);
-							var html_tag = typeof tag === 'object' && 'is' in tag ? tag.is : ( typeof tag === 'string' ? tag : 'div');
+							var tag = modifiers.tag ? modifiers.tag : (hasKey(config.tags, modifiers.type) ? config.tags[modifiers.type] : config.tags['default']);
+							var html_tag = hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div');
+							var elements = "";
 
-							var elements = '<'+html_tag+' element="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
+							if( hasKey(config, 'components') && hasKey(config.components, name) )
+								elements = '<'+name+'>'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+name+'>\n';
+							else
+								elements = '<'+html_tag+' element="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
 
 							if( modifiers.loop )
-								elements = '{% for i in 1..'+modifiers.loop+' %}\n\t\t'+elements+'\t{% endfor %}\n';
+								elements = '\n\t{% for i in 1..'+modifiers.loop+' %}\n\t\t'+elements+'\t{% endfor %}\n';
 							else
-								elements = '\n\t'+elements;
+								elements = '\n\n\t'+elements;
 
 							data.elements = elements;
 
-							// generate acf
 							var field = self.generateACFComponent('group', name);
 							field.sub_fields = data.fields[0];
 
@@ -510,28 +553,33 @@ var wml = (function (config) {
 
 			}
 			else {
-
-				if( isString(element) && element !== 'layout' )
-				{
+				if( isString(element) && element !== 'layout' ) {
 					var modifiers = self.getModifiers(element);
 					var name =  modifiers.name;
 
-					var tag = modifiers.tag ? modifiers.tag : (modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default']);
+					var tag = modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default'];
 
-					var html_tag = typeof tag === 'object' && 'is' in tag ? tag.is : ( typeof tag === 'string' ? tag : 'div');
-					var content = typeof tag === 'object' && 'data' in tag ? tag.data : '';
+					var html_tag = modifiers.tag ? modifiers.tag : ( hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div') );
+					var content = hasKey(tag, 'data') ? tag.data : '';
 					var filename = _snakeCase(name);
 
-					data.content = filename+' : '+( content.indexOf('(') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
+					if( content === false )
+						data.content = '';
+					else
+						data.content = filename+' : '+( !isString(content) || content.indexOf('(') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
 
 					data.scss = '&__'+filename+'{  }';
 
-					if( typeof tag === 'object' && 'html' in tag)
+
+					if( hasKey(tag, 'html') )
 						data.elements = tag.html.replace(/{{ data/g, '{{ data.'+filename).replace('<tag', '<'+html_tag).replace('</tag>', '</'+html_tag+'>').replace('{{ name }}', filename);
-					else if( typeof tag === 'object' && 'innerHtml' in tag)
+					else if( hasKey(tag, 'innerHtml') )
 						data.elements = '<'+html_tag+' element="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename)+'</'+html_tag+'>';
 					else
 						data.elements = '<'+html_tag+' element="'+filename+'">{{ data.'+filename+'|raw }}</'+html_tag+'>';
+
+					if( content === false )
+						data.elements = data.elements.replace('{{ data.'+filename+'|raw }}', '');
 
 					data.fields = self.generateACFComponent(modifiers.type, name);
 				}
@@ -549,7 +597,7 @@ var wml = (function (config) {
 
 		var field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
 
-		field.key = getUniqid('field_');
+		field.key = getId('field_', name);
 		field.label = ucFirst(name).replace('_', ' ');
 		field.name = name;
 
@@ -557,12 +605,28 @@ var wml = (function (config) {
 	};
 
 
+	wml.prototype.generateACFGroup = function(type, name){
+
+		if( !config.acf || ( 'ignore' in config.acf && !hasKey(config.acf.ignore, type) ) )
+			return [];
+
+		var group = JSON.parse(fs.readFileSync( config.acf.path+'/' + (fs.existsSync(config.acf.path+'/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
+
+		group.key = getId('group_', name);
+		group.title = ucFirst(name).replace('_', ' ');
+		group.modified = Math.round(Date.now()/1000);
+
+		if( type === 'page')
+			group.fields[0].key = getId('field_', 'layout'+name);
+
+		return group;
+	};
+
+
 	wml.prototype.generateData = function(elements){
 
 		if( isDefined(elements) && isIterable(elements) ) {
-
 			if( isArray(elements) ) {
-
 				return Promise.all(elements.map(function(element){
 					return self.getData(element);
 				})).then(function(data){
@@ -570,7 +634,6 @@ var wml = (function (config) {
 				});
 			}
 			else{
-
 				return Promise.all(Object.keys(elements).map(function(key){
 					return self.getData(elements[key]);
 				})).then(function(data){
@@ -595,11 +658,9 @@ var wml = (function (config) {
 	wml.prototype.writeFile = function(data){
 
 		if( Array.isArray(data) ) {
-
 			return self.writeFiles(data);
 		}
 		else {
-
 			return new Promise(function (resolve, reject) {
 
 				var filePath = Object.keys(data)[0];
@@ -608,24 +669,20 @@ var wml = (function (config) {
 				filePath = config.outputPath + filePath;
 
 				try {
-
 					var dirname = path.dirname(filePath);
 					mkdir.sync(dirname);
 
 					var file_content = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
 
-					if( content.length > file_content.length )
-					{
+					if( content.length > file_content.length ) {
 						fs.writeFileSync(filePath, content);
 						resolve(true);
 					}
 					else {
-
 						resolve(false);
 					}
 				}
 				catch (e) {
-
 					reject(e);
 				}
 			});

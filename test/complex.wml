@@ -133,8 +133,7 @@ home:
       - img
       - video
     - block|loop(2):
-      - title small
-      - title big
+      - title
       - text
       - cta
     - globalise:
@@ -145,7 +144,7 @@ home:
           - $logo
           - wysiwyg
           - cta
-    - scrollDown|tag(a)
+    - scroll down|tag(a)
   - $company:
     - title
     - block|loop(3):
