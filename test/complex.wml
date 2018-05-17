@@ -16,7 +16,6 @@ layout:
       - $newsletter
       - $globalise
       - $link|loop(2)
-
   - catalog:
     - $nav
     - $heading:
@@ -28,7 +27,6 @@ layout:
       - text
       - url
     - $footer
-
   - article:
     - $nav
     - $footer
@@ -47,7 +45,6 @@ layout:
       - subtitle
       - text
       - cta|tag(a)
-      - textPosition
     - $slider:
       - title
       - cta|tag(a)
@@ -82,11 +79,11 @@ layout:
       - img
       - title
       - text
+      - label
       - url
     - $focus:
-      - visual:
-        - desktop
-        - mobile
+      - title
+      - img
       - text
       - cta
     - $quote:
@@ -120,12 +117,6 @@ layout:
       - slider:
         - slide|loop:
           - cta
-
-    - $anchor:
-      - title
-      - name
-
-
 home:
   - layout: default
   - $hero:

@@ -184,9 +184,6 @@ var wml = (function (config) {
 					files.push(file);
 				});
 
-				var group = self.generateACFGroup('page', name);
-				files.push( createACFFile(group) );
-
 				addFiles(files);
 
 				if( isArray(structure) ) {
@@ -601,7 +598,7 @@ var wml = (function (config) {
 
 		var field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
 
-		field.key = getId('field_', name);
+		field.key = getUniqid('field_');
 		field.label = ucFirst(name).replace('_', ' ');
 		field.name = name;
 
