@@ -17,7 +17,7 @@ var wml = (function (config) {
 		outputPath: '.',
 		acf: {
 			path: 'structure/acf',
-			ignore: ['close', 'prev', 'next', 'next', 'scroll_down']
+			ignore: ['close', 'previous', 'next', 'next', 'scroll_down']
 		},
 		type: 'vue-twig-scss',
 		alias: {
@@ -474,6 +474,10 @@ var wml = (function (config) {
 		return isDefined(item) && ((isObject(item) && Object.keys(item)[0].indexOf('$') === 0) || ( isString(item) && item.indexOf('$') === 0 ));
 	}
 
+	function plural(name){
+		return name.length ? (name.substr(-1) === 'y' ? name.slice(0, -1)+'ies' : name+'s') : '';
+	}
+
 
 	wml.prototype.getData = function(element){
 
@@ -539,11 +543,8 @@ var wml = (function (config) {
 
 							data.elements = elements;
 
-							var field = self.generateACFComponent('group', name);
+							var field = self.generateACFComponent(modifiers.loop ? 'repeater' : 'group');
 							field.sub_fields = data.fields[0];
-
-							if( modifiers.loop )
-								field.type = 'repeater';
 
 							data.fields = field;
 						}
@@ -597,6 +598,11 @@ var wml = (function (config) {
 			return [];
 
 		var field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
+
+		if( type === 'repeater'){
+			field.button_label = "Add "+name;
+			name = plural(name);
+		}
 
 		field.key = getUniqid('field_');
 		field.label = ucFirst(name).replace('_', ' ');

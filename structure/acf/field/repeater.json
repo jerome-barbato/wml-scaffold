@@ -1,0 +1,9 @@
+{
+  "key": "",
+  "label": "Repeater",
+  "name": "repeater",
+  "type": "repeater",
+  "layout": "block",
+  "sub_fields": [],
+  "button_label": "Add item"
+}
