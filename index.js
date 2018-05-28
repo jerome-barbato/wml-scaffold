@@ -23,7 +23,9 @@ var wml = (function (config) {
 		alias: {
 			'description': 'text',
 			'breadcrumb': 'nav',
-			'poster': 'image'
+			'thumbnail': 'image',
+			'poster': 'image',
+			'picto': 'icon'
 		},
 		rewrite: {
 			'img': 'image',

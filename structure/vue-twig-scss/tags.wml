@@ -8,11 +8,6 @@ subtitle:
   is: h3
   data: Dolor sit amet
 
-picto:
-  is: span
-  data: facebook
-  html: '<tag element="{{ name }}" data-icon="{{ data }}"></tag>'
-
 icon:
   is: span
   data: facebook
@@ -20,8 +15,8 @@ icon:
 
 cta:
   is: button
-  data: "{text:'Action', link:'#'}"
-  html: '<tag element="cta" href="{{ data.link }}">{{ data.text }}</tag>'
+  data: "{title:'Action', url:'#'}"
+  html: '<tag element="cta" href="{{ data.url }}">{{ data.title }}</tag>'
 
 media:
   is: media
@@ -30,14 +25,9 @@ media:
 
 date: time
 
-thumbnail:
-  is: div
-  innerHtml: '<img src="{{ data }}"/>'
-  data: "asset('/tmp/placeholder.jpg')"
-
 image:
   is: div
-  innerHtml: '<img src="{{ data }}"/>'
+  innerHtml: '<img src="{{ data|resize(800,600) }}" alt="{{ data.alt|default() }}"/>'
   data: "asset('/tmp/placeholder.jpg')"
 
 article: article
