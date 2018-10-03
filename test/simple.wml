@@ -1,1 +1,32 @@
-simple:
+layout:
+  - default:
+    - $header:
+      - $logo
+      - $header nav|extend(nav)
+    - $menu:
+      - $switch
+      - $search
+      - close
+      - $global:
+        - $link
+      - address
+      - phone
+    - $footer:
+      - $contact
+      - $social
+      - $newsletter
+      - $globalise
+      - $link|loop(2)
+
+catalog:
+  - layout: default
+  - $nav
+  - $heading:
+    - $breadcrumb
+    - title
+    - text
+  - $acquisition:
+    - title
+    - text
+    - url
+  - $footer

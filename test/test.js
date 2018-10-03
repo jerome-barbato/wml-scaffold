@@ -15,12 +15,12 @@ function deleteFolderRecursive(path) {
 		});
 		fs.rmdirSync(path);
 	}
-};
+}
 
 deleteFolderRecursive('./export');
 
-function test(input, output, done) {
-	wml({outputPath:'./export'})
+function test(input, params, output, done) {
+	wml(params)
 		.process(input)
 		.then(function(result) {
            expect(output).to.eql(result);
@@ -34,10 +34,7 @@ function test(input, output, done) {
 describe('Test for pages', function() {
 
     it('Test complex generation', function(done) {
-        test(
-        	'./test/complex.wml',
-	        true,
-	        done
-        );
+       // test('./test/complex.wml', {outputPath:'./export', design:'component'}, true, done);
+        test('./test/complex.wml', {outputPath:'./export', design:'atomic'}, true, done);
     });
 });
