@@ -1,0 +1,246 @@
+.a-input {
+  $c: &;
+  $color-main   : $c-main;
+  $color-light  : #999;
+  $color-subtle : #ccc;
+  $color-error  : red;
+
+  vertical-align: middle;
+
+  & + &{ margin-top: 1.5rem; @include clearfix(); }
+  @media #{$to-phone} { &, &.no-mt { margin-top: 2rem !important } }
+
+  &.no-mt { margin-top: 0 !important }
+  &.center { margin-left: auto; margin-right: auto; float: none }
+  &.clear { clear: both }
+
+  .error { color: $color-error }
+
+  autocomplete, custom-select{
+    &, &+label{
+      display: none
+    }
+  }
+
+
+  // Submit
+
+  &--submit { text-align: center;
+
+    span{margin-right: 1.5rem; font-size: 1.1rem }
+  }
+
+
+  // Label
+
+  &--label { margin-bottom: 2rem }
+  &__label {
+    color: $color-main; position: relative; text-align: left;
+    .required{ color: red }
+  }
+
+  //label.error {
+  //	position: absolute; right: 0; bottom: 100%;
+  //	font-size: 1rem; margin: 0; display: none !important;
+  //}
+
+
+  // Container
+
+  &__container {
+    position: relative; @include clearfix();
+
+    &--block { .a-input__label + & { margin-top: $input-padding } }
+
+    &--inline {
+      display: inline-block; vertical-align: middle;
+      * + & { margin-left: 3rem }
+      @media #{$to-phone} { margin-left: 0; display: block; margin-top: $input-padding }
+    }
+  }
+
+  &--email,&--text,&--select,&--autocomplete,&--tel,&--textarea,&--number, &--formated_number{
+    position: relative; z-index: 1;
+    #{$c}__label{ position: absolute; top: 1.2rem; left: 2rem; transition: allow(top font-size, 0.2s); color: $c-main;
+      pointer-events: none; padding: 0.2rem; z-index: 1;
+
+      @media #{$to-small}{
+        right: 2rem; white-space: nowrap; overflow: hidden;
+      }
+      sup{font-size: 0.8rem; vertical-align: top }
+      &:before{ content: ''; position: absolute; top: 0; bottom: 0; left: 0; right: 0; background: white; z-index: -1; margin-top: 1px }
+    }
+
+    @media #{$to-tablet}{
+      white-space: nowrap;
+    }
+
+    input[type="email"]:focus,input[type="tel"]:focus,input[type="text"]:focus,textarea:focus,input[type="number"]:focus,[data-empty="false"]{
+      & + #{$c}__label{
+        top: -1.2rem; font-size: 1.2rem; right: auto;
+        &:before{ top: 50% }
+      }
+    }
+  }
+
+  // Text & Similar
+
+  #{$inputs}, .ui-selectmenu-menu, .ui-datepicker {
+    border: none; border-radius: none;
+  }
+  #{$inputs}, .ui-menu-item, &__select_multiple label, &__date_range label, &__checkbox, &__radio {
+    font-size: 14px;
+  }
+
+  #{$inputs} {
+    display: block; width: 100%; color: $color-main; background-color: white; padding: $input-padding; border: solid 1px $c-border;
+    box-shadow: none;
+
+    &::placeholder { color: $color-main }
+    &.error { border-color: $color-error }
+    &:focus + label.error { display: block!important }
+    &:focus + label.error:empty { display: none!important }
+  }
+
+
+  // Select & Date
+
+  select[data-custom]{ visibility: hidden }
+  select.error[data-custom] ~ .ui-selectmenu-button{ border-color: $color-error}
+
+  .ui-selectmenu-menu, .ui-datepicker { border-top: 0; background: #fff; width: 100% }
+
+  .a-input__date:after, .ui-selectmenu-button:after {
+    content: '▼'; font-size: $input-padding; position: absolute;
+    right: $input-padding; top: 50%; margin-top: -0.5em; color: $color-light;
+  }
+
+  // Select
+
+  &--select{
+    &:before{
+      content: ''; border-left: 6px solid transparent; border-right: 6px solid transparent;
+      border-top: 5px solid $c-primary; display: inline-block; position: absolute; right: 2.4rem;
+      top: 2.5rem; z-index: 2;
+    }
+    select{
+      border: 1px solid $c-border;
+      padding: 1.6rem 2rem;
+      min-height: 5.3rem;
+      width: 100%;
+      background: white;
+      color: #838385;
+      -webkit-appearance: none;
+    }
+  }
+
+  .ui-selectmenu-button-filled .ui-selectmenu-text { color: inherit; font-style: inherit }
+
+  .ui-menu-item {
+    padding: $input-padding; color: $color-light; font-size: 1.2rem;
+    &:hover { background-color: $color-subtle }
+  }
+
+
+  // Date
+
+  &--date_range > &__label { vertical-align: middle }
+  &__date input { text-align: center; cursor: pointer; padding-right: 2.2rem !important }
+
+  .ui-datepicker-prev:before, .ui-datepicker-next:before {
+    position: absolute; top: 50%; margin-top: -0.5em; font-size: 1rem;
+  }
+  .ui-datepicker-prev:before { content: '<'; left: 50%; margin-left: -0.5em }
+  .ui-datepicker-next:before { content: '>'; right: 50%; margin-right: -0.5em }
+
+
+  // Select multiple & Date range
+
+  &__select_multiple, &__date_range {
+
+    .ui-selectmenu-button { display: inline-block }
+
+    &__content {
+      display: inline-block;
+      @media #{$to-phone} { display: block }
+
+      label {
+        margin-right: 1rem;
+        @media #{$to-phone} { display: inline-block; width: 4rem }
+      }
+
+      > * { vertical-align: middle }
+
+      & + & {
+        margin-left: 1rem;
+        @media #{$to-phone} { margin-left: 0; margin-top: 0.5rem }
+      }
+
+      .a-input {
+        display: inline-block; float: none; padding: 0; margin-top: 0;
+        &--date { width: 14rem }
+        &--select { width: 10.5rem }
+      }
+    }
+  }
+
+
+  // Checkbox & Radio
+
+  &--radio,&--checkbox{
+    #{$c}__container--block{
+      display: flex; flex-wrap: wrap;
+      & > #{$c}__label{
+        order: -1; flex-basis: 100%; margin-bottom: 4rem;
+        @media #{$to-phone} { margin-bottom: 2rem }
+      }
+    }
+  }
+
+  &__checkbox, &__radio {
+    display: inline-block; position: relative; padding-left: 4.5rem;
+    & + & { margin-left: 3rem }
+
+    @media #{$to-phone} { margin-left: 0!important; margin-top: 2rem; width: 100% }
+
+    input[type="checkbox"], input[type="radio"] {
+      $size : 31px;
+      border: 1px solid $c-border; margin: 0; left: 0; top: 50%; margin-top: -0.5em; box-shadow: none;
+      width: $size; height: $size; font-size: $size; position: absolute; cursor: pointer;
+
+      &:checked:before {
+        $size : 17px;
+        width: $size; height: $size; font-size: $size;
+        position: center();
+      }
+    }
+  }
+
+  &__checkbox input[type="checkbox"] {
+    &:checked {
+      @include icon('check');
+      &:before{ color: $c-primary }
+    }
+  }
+
+  &__radio input[type="radio"] {
+    border-radius: 50%;
+    &:checked:before { content: ''; border-radius: 50%; background-color: $c-primary; }
+  }
+
+
+  // File
+
+  &--file{
+    position: relative;
+    #{$c}__label{ color: $color-main; background-color: #fbf9fa; font-weight: bold; display: inline-block; padding: $input-padding; width: 100%; }
+    #{$c}__container { position:absolute; top: 5px; right: 4px; margin-top: 0; }
+  }
+  &__file .button {
+    padding: 0.5rem 1.3rem;
+    input[type="file"] { position: overlay(); opacity: 0.01; width: 100%; cursor: pointer }
+  }
+
+  //Errors
+  .has-error{ font-size:1rem; color:$color-error}
+}

@@ -1,0 +1,18 @@
+{% if not options.parent_is_form|default() %}
+
+  <form action="{{ options.action|default('') }}" target="{{ options.target|default('') }}" class="{{ options.class|default() }}" block="m-form" method="post" data-message="{{ options.message|default() }}" data-error="{{ options.error|default() }}" >
+
+    {% for input in data|default([]) %}
+
+      {% include '@snpi/design_system/atom/input.twig' %}
+    {% endfor %}
+  </form>
+
+{% else %}
+
+  <div block="m-form">
+    {% for input in data|default([]) %}
+      {% include '@snpi/design_system/atom/input.twig' %}
+    {% endfor %}
+  </div>
+{% endif %}

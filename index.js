@@ -380,7 +380,7 @@ var wml = (function (config) {
 
 				if( name !== 'layout') {
 
-					var structure_path = modifiers.extend ? config.outputPath + '/component/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
+					var structure_path = modifiers.extend ? 'structure/' + config.type + '/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
 
 					if( !fs.existsSync(structure_path) )
 						structure_path = 'structure/' + config.type + '/default';

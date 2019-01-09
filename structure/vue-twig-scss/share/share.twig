@@ -1,0 +1,7 @@
+<aside block="{{ name }}">
+	<h2 element="title">{{ data|get('share_title')|raw }}</h2>
+	<share social="facebook" title="{{ data.title|escape }}"></share>
+	<share social="twitter" text="{{ data.title|escape }}"></share>
+	<share social="linkedin" title="{{ data.title|escape }}"></share>
+	<share social="mail" subject="{{ data.title|escape }}"></share>
+</aside>

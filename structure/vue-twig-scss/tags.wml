@@ -84,9 +84,6 @@ phone:
 mail:
   data: 'no-reply@dev.fr'
 
-slide:
-  html: '<slide element="{{ name }}"></slide>'
-
 video:
   is: div
   data: "asset('/tmp/placeholder.mp4')"

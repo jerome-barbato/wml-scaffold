@@ -1,0 +1,61 @@
+.#{$name}{
+	$c: &;
+
+	margin-bottom: 2rem;
+
+	&__table{
+		text-align: center; background: white;
+		@media #{$to-tablet}{ display: flex }
+		tbody > *{
+			&:nth-child(2n){ background: $c-background-darker }
+		}
+	}
+
+	&__labels{
+		@media #{$to-tablet}{
+			width: 66%
+		}
+		& > *{
+			background: $c-primary; color: white; padding: 1.5rem 1rem; text-transform: uppercase; font-weight: normal; font-size: 1.5rem;
+			@media #{$to-tablet}{
+				& + *{ border-top: solid 1px $c-grey }
+			}
+			@media #{$from-tablet}{
+				& + *{ border-left: solid 1px $c-grey; width: 11.25%  }
+				&:first-child{ background: $c-secondary }
+			}
+
+		}
+	}
+
+	&__item{
+		@media #{$to-tablet}{
+			width: 33%
+		}
+		& > *{
+			padding: 1.5rem 1rem; color: $c-primary;
+			@media #{$to-tablet}{
+				& + *{ border-top: solid 1px $c-grey }
+			}
+			@media #{$from-tablet}{
+				& + *{ border-left: solid 1px $c-grey }
+			}
+
+			&:nth-child(2n+3){
+				#{$c}__empty:after{ content: '' }
+			}
+
+			#{$c}__empty{
+				&:before{ content: '\2014'}
+			}
+		}
+	}
+
+	&__year{ color: $c-secondary }
+
+	&__filters{ width: 100%; margin-bottom: 3rem; height: 5rem }
+
+	@media #{$to-tablet}{
+
+	}
+}

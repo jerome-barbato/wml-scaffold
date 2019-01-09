@@ -1,0 +1,37 @@
+{% set data = data|default({
+	socials:{
+		title: __('Follow us'),
+		links: [
+			{
+				icon: 'facebook',
+				url: 'https://www.facebook.com/facebookname'
+			},
+			{
+				icon: 'twitter',
+				url: 'https://twitter.com/twittername'
+			},
+			{
+				icon: 'linkedin',
+				url: 'https://www.linkedin.com/company/linkedinname'
+			},
+			{
+				icon: 'youtube',
+				url: 'https://www.youtube.com/user/youtubename'
+			},
+
+		]
+	}
+}) %}
+
+<div block="{{ name }}" data-col="4/12" class="vcenter">
+	<h2 element="title">{{ data.socials.title|raw }}</h2>
+
+	<div element="socials">
+
+		{%  for link in data.socials.links %}
+
+			<a href="{{ link.url }}" element="item" mod="{{ link.icon }}" target="_blank" title="{{ __('Follow us on ') ~ link.icon }}" aria-label="{{ __('Follow us on ') ~ link.icon }}"></a>
+		{% endfor %}
+
+	</div>
+</div>
