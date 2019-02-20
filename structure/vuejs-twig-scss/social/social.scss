@@ -1,0 +1,54 @@
+.#{$name}{
+
+	background: $c-primary; color: white; padding: 9rem 1rem 10rem;
+
+	@media #{$to-small-excluded}{
+		padding: 4rem 3rem; order: -1;
+	}
+
+	&__title{ @extend %title; @extend %title--small; text-align: center; margin-bottom: 2.5rem }
+
+	&__item{
+		display: inline-block;  color: $c-primary; font-size: 3.2rem; line-height: 3.2rem; transition: allow(opacity);  flex: 1;
+		position:relative; text-align: center; width:5.5rem; height: 5.5rem; vertical-align: middle;
+
+		&:after{ content:''; transition: allow(background); position: absolute; border-radius: 50%; left: 0; top: 0;
+			width: 100%; padding-top: 100%; z-index: 0; background: white }
+
+		&:before{ z-index: 1; position: relative; display: inline-block; line-height: 5.5rem; }
+
+		& + &{ margin-left: 2rem }
+
+		@media  #{$from-tablet}{
+			&:hover {
+				opacity: 0.7;
+			}
+		}
+
+		&--linkedin {
+			@include icon('linkedin-social');
+			&:before {
+				font-size: 2rem
+			}
+		}
+		&--twitter{ @include icon('twitter') }
+		&--youtube{ @include icon('youtube') }
+		&--facebook{ @include icon('facebook') }
+
+	}
+
+	@media #{$to-phone}{
+		&__title{ font-size: 2.6rem }
+	}
+
+	@media screen and (min-width: $screen-small){
+		& > *{ margin-right: 4rem; z-index: 1 }
+		&:before{ content: ""; display: block; transform: $skew; transform-origin: top left; position: absolute;
+			left: 0; top: -3rem; right: -5rem; bottom: 0; background: $c-primary; z-index: 0 }
+		&__item{
+			& + &{ margin-left: 2.5rem }
+		}
+        &__socials{ white-space: nowrap }
+	}
+
+}

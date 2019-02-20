@@ -1,0 +1,10 @@
+<div block="{{ name }}">
+    <swiper class="m-slider" :options="sliderOptions">
+        {% for item in data %}
+                <swiper-slide class="m-slider__slide">
+                    <elements></elements>
+                    <components></components>
+                </swiper-slide>
+        {% endfor %}
+    </swiper>
+</div>
