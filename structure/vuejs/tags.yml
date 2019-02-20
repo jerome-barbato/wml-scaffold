@@ -1,0 +1,100 @@
+default: div
+
+title:
+  is: h2
+  data: Lorem ipsum
+
+subtitle:
+  is: h3
+  data: Dolor sit amet
+
+icon:
+  is: span
+  data: facebook
+  html: '<tag class="{{ name }}" :data-icon="data"></tag>'
+
+cta:
+  is: button
+  html: '<tag class="cta" :href="data">{{ title }}</tag>'
+
+media:
+  is: media
+  data: "{image:'/tmp/placeholder.jpg', video:'/tmp/placeholder.mp4'}"
+  html: '<media image="image" video="video"></media>'
+
+date: time
+
+image:
+  is: div
+  innerHtml: '<img :src="data" alt=""/>'
+  data: "/tmp/placeholder.jpg"
+
+article: article
+
+close:
+  is: button
+  data: false
+  innerHtml: "Close"
+
+scroll_down:
+  is: button
+  data: false
+  innerHtml: ""
+
+download: button
+
+next:
+  is: button
+  data: false
+
+previous:
+  is: button
+  data: false
+
+button: button
+header: header
+heading: header
+footer: footer
+grid: section
+project: article
+
+link:
+  data: '#'
+  html: '<a class="{{ name }}" :href="data"></a>'
+
+number:
+  data: 85
+
+category:
+  data: 'My category'
+
+name:
+  data: 'Simon'
+
+job:
+  data: 'Architect'
+
+address:
+  data: '22 boulevard Stalingrad<br/>Nice'
+
+phone:
+  data: '+33 00 11 22 33 44'
+
+mail:
+  data: 'no-reply@dev.fr'
+
+slide:
+  html: '<slide class="{{ name }}"></slide>'
+
+video:
+  is: div
+  data: "/tmp/placeholder.mp4"
+  innerHtml: '<video><source src="{{ data }}"/></video>'
+
+wysiwyg:
+  is: div
+  data: '<h2>Lorem Ipsum</h2><h3>dolor sit amet</h3><h4>consectetur adipiscing</h4><p>Fusce fermentum <b>metus neque</b>, eu <i>euismod risus</i> lacinia sed. Pellentesque ac ipsum at enim euismod tempor. In sem odio</p><p>vehicula at facilisis id, viverra nec risus. Sed facilisis diam nec lorem pulvinar, a porttitor justo molestie. Etiam non cursus ligula.</p>'
+
+text:
+  is: p
+  data: 'Fusce fermentum metus neque, eu euismod risus lacinia sed. Pellentesque ac ipsum at enim euismod tempor. In sem odio<br/>vehicula at facilisis id, viverra nec risus. Sed facilisis diam nec lorem pulvinar, a porttitor justo molestie. Etiam non cursus ligula.'

@@ -14,13 +14,14 @@ var wml = (function (config) {
 	wml.uid = {};
 
 	config = Object.assign({
-		outputPath: '.',
+		output: './export',
+		input: false, //./structure.wml
 		acf: {
 			path: 'structure/acf',
-			ignore: ['close', 'previous', 'next', 'next', 'scroll_down']
+			ignore: ['close', 'previous', 'next', 'scroll_down', 'header', 'footer']
 		},
-		type: 'vue-twig-scss',
-		design: 'component',
+		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs
+		design: 'atomic', //component|atomic
 		atomic:['page','organism','molecule','atom'],
 		alias: {
 			'description': 'text',
@@ -39,8 +40,31 @@ var wml = (function (config) {
 
 	}, config);
 
+	if( config.type === "vuejs")
+		config.design = "component";
 
-	wml.prototype.process = function(args){
+	function deleteFolderRecursive(path) {
+		if( fs.existsSync(path) ) {
+			fs.readdirSync(path).forEach(function(file,index){
+				var curPath = path + "/" + file;
+				if(fs.lstatSync(curPath).isDirectory()) {
+					deleteFolderRecursive(curPath);
+				} else {
+					fs.unlinkSync(curPath);
+				}
+			});
+			fs.rmdirSync(path);
+		}
+	}
+
+	function camelCase(string) {
+
+		string = _camelCase(string);
+		return string.charAt(0).toUpperCase() + string.slice(1);
+	}
+
+
+	wml.prototype.process = function(){
 
 		return self.loadUniqID()
 			.then(function(uid){
@@ -49,7 +73,11 @@ var wml = (function (config) {
 			})
 			.then(function(tags){
 				config.tags = tags;
-				return self.loadFile(args);
+				return self.loadLanguage();
+			})
+			.then(function(language){
+				config.language = language;
+				return self.loadFile(config.input);
 			})
 			.then(self.generateFiles)
 			.then(function(){
@@ -57,13 +85,6 @@ var wml = (function (config) {
 			})
 			.then(self.writeUniqID)
 	};
-
-
-	function camelCase(string) {
-
-		string = _camelCase(string);
-		return string.charAt(0).toUpperCase() + string.slice(1);
-	}
 
 
 	wml.prototype.loadUniqID = function(){
@@ -104,7 +125,21 @@ var wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				var tags = yaml.safeLoad(fs.readFileSync('structure/'+config.type+'/tags.wml', 'utf8'));
+				var tags = yaml.safeLoad(fs.readFileSync('structure/'+config.type+'/tags.yml', 'utf8'));
+				resolve(tags);
+
+			} catch (e) {
+				reject(e);
+			}
+		});
+	};
+
+
+	wml.prototype.loadLanguage = function(){
+
+		return new Promise(function (resolve, reject) {
+			try {
+				var tags = yaml.safeLoad(fs.readFileSync('structure/'+config.type+'/language.yml', 'utf8'));
 				resolve(tags);
 
 			} catch (e) {
@@ -147,6 +182,7 @@ var wml = (function (config) {
 				var structure_files = fs.readdirSync(structure_path);
 
 				structure_files.forEach(function(structure_file){
+
 					var content = fs.readFileSync(structure_path+'/'+structure_file, 'utf8');
 
 					content = content
@@ -164,6 +200,8 @@ var wml = (function (config) {
 					}
 
 					var components = [];
+					var components_import = [];
+					var components_list = [];
 
 					if( isArray(structure) ) {
 						structure.forEach(function(component){
@@ -173,17 +211,25 @@ var wml = (function (config) {
 
 								var component_name = _snakeCase(key[0]);
 
+								components_import.push('import '+_camelCase(component_name)+' from "@/component/'+_snakeCase(component_name)+'";');
+								components_list.push(_camelCase(component_name));
+
 								var folder = 'component';
 
 								if( config.design === 'atomic' )
 									folder = config.atomic[1];
 
-								components.push("{% include '"+folder+"/"+component_name+".twig' %}");
+								if( config.type === 'vuejs-twig-scss')
+									components.push("{% include '"+folder+"/"+component_name+".twig' %}");
+								else if( config.type === 'vuejs')
+									components.push('<'+_camelCase(component_name)+'></'+_camelCase(component_name)+'>');
 							}
 						});
 					}
 
 					content = content.replace('<components></components>', components.join('\n\t'));
+					content = content.replace('import components;', components_import.join('\n\t'));
+					content = content.replace('components:{ },', 'components:{'+components_list.join(',')+'}');
 
 					var folder = 'page';
 
@@ -226,7 +272,9 @@ var wml = (function (config) {
 			elements: [],
 			content: [],
 			components: [],
-			fields: []
+			fields: [],
+			components_list: [],
+			components_import: [],
 		};
 
 		data.forEach(function(key){
@@ -245,6 +293,8 @@ var wml = (function (config) {
 		_data.scss = format(_data.scss, '', '\n\t');
 		_data.elements = format(_data.elements, '', '\n\t');
 		_data.components = format(_data.components, '', '\n\t');
+		_data.components_list = _data.components_list.join(',');
+		_data.components_import = _data.components_import.join('\n\t');
 
 		return _data;
 	}
@@ -380,7 +430,7 @@ var wml = (function (config) {
 
 				if( name !== 'layout') {
 
-					var structure_path = modifiers.extend ? config.outputPath + '/component/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
+					var structure_path = modifiers.extend ? config.output + '/component/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
 
 					if( !fs.existsSync(structure_path) )
 						structure_path = 'structure/' + config.type + '/default';
@@ -405,10 +455,15 @@ var wml = (function (config) {
 							var filepath = '/design_system/'+folder+'/' + (structure_files.length > 1 ? filename + '/' + filename : filename) + path.extname(structure_file);
 							var content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
 
-							if( content.indexOf('<elements></elements>') !== -1 && data.content.length )
-								content =  '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
+							if( path.extname(structure_file) === '.twig' && content.indexOf('<elements></elements>') !== -1 && data.content.length)
+								content = '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
+							else if( path.extname(structure_file) === '.vue')
+								content = content.replace("datajs:''", data.content);
 
 							var name = camelCase(modifiers.name);
+
+							if( config.type === "vuejs")
+								name = _camelCase(modifiers.name);
 
 							if( config.design === 'atomic' )
 								name = config.atomic[depth].substr(0, 1) + '-' + _snakeCase(modifiers.name);
@@ -420,7 +475,10 @@ var wml = (function (config) {
 								.replace('</tag>', '</'+tag+'>')
 								.replace('<elements></elements>', data.elements)
 								.replace('<components></components>', data.components)
+								.replace('import components;', data.components_import)
+								.replace('components:{ },', 'components:{'+data.components_list+'}')
 								.replace('&__#{$elements}{ }', data.scss)
+								.replace('.#{$elements}{ }', data.scss)
 								.replace(/\n\t\n/, '\n\t');
 
 							var file = {};
@@ -514,6 +572,8 @@ var wml = (function (config) {
 				elements: '',
 				content: '',
 				components: '',
+				components_list: [],
+				components_import: [],
 				fields: {}
 			};
 
@@ -525,17 +585,33 @@ var wml = (function (config) {
 
 						var components = [];
 
-						if( component.modifiers.loop )
-							components.push("{% for i in 1.."+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+" %}");
+						if( component.modifiers.loop ){
+
+							if( config.type === 'vuejs-twig-scss')
+								components.push("{% for i in 1.."+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+" %}");
+							else if( config.type === 'vuejs')
+								components.push("<div v-for=\"index in "+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+"\" :key=\"index\">");
+						}
 
 						var folder = 'component';
 						if( config.design === 'atomic' )
 							folder = config.atomic[depth];
 
-						components.push((component.modifiers.loop?'\t':'')+"{% include '"+folder+"/"+_snakeCase(component.name)+".twig' %}");
+						if( config.type === 'vuejs-twig-scss')
+							components.push((component.modifiers.loop?'\t':'')+"{% include '"+folder+"/"+_snakeCase(component.name)+".twig' %}");
+						else if( config.type === 'vuejs')
+							components.push((component.modifiers.loop?'\t':'')+'<'+_camelCase(component.name)+'></'+_camelCase(component.name)+'>');
 
-						if( component.modifiers.loop )
-							components.push("{% endfor %}");
+						data.components_list.push(_camelCase(component.name));
+						data.components_import.push('import '+_camelCase(component.name)+' from "@/component/'+_snakeCase(component.name)+'";');
+
+						if( component.modifiers.loop ){
+
+							if( config.type === 'vuejs-twig-scss')
+								components.push("{% endfor %}");
+							else if( config.type === 'vuejs')
+								components.push("</div>");
+						}
 
 						data.components = components.join('\n\t');
 						data.fields = self.generateACFComponent('component', component.modifiers.name);
@@ -564,7 +640,7 @@ var wml = (function (config) {
 							if( hasKey(config, 'components') && hasKey(config.components, name) )
 								elements = '<'+name+'>'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+name+'>\n';
 							else
-								elements = '<'+html_tag+' element="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
+								elements = '<'+html_tag+' '+(config.language.bem?'element':'class')+'="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
 
 							if( modifiers.loop )
 								elements = '\n\t{% for i in 1..'+modifiers.loop+' %}\n\t\t'+elements+'\t{% endfor %}\n';
@@ -600,18 +676,22 @@ var wml = (function (config) {
 					else
 						data.content = filename+' : '+( !isString(content) || content.indexOf('(') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
 
-					data.scss = '&__'+filename+'{  }';
+					data.scss = (config.language.bem?'&__':'.')+filename+'{  }';
 
 
-					if( hasKey(tag, 'html') )
-						data.elements = tag.html.replace(/{{ data/g, '{{ data.'+filename).replace('<tag', '<'+html_tag).replace('</tag>', '</'+html_tag+'>').replace('{{ name }}', filename);
+					if( hasKey(tag, 'html') ){
+
+						data.elements = tag.html.replace('<tag', '<'+html_tag).replace('</tag>', '</'+html_tag+'>').replace('{{ name }}', filename);
+						data.elements = data.elements.replace(/{{ data/g, '{{ '+(config.language.data?'data.':'')+filename);
+						data.elements = data.elements.replace(/="data"/g, '="'+(config.language.data?'data.':'')+filename+'"');
+					}
 					else if( hasKey(tag, 'innerHtml') )
-						data.elements = '<'+html_tag+' element="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename)+'</'+html_tag+'>';
+						data.elements = '<'+html_tag+' '+(config.language.bem?'element':'class')+'="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename).replace(/="data"/g, '="'+filename+'"')+'</'+html_tag+'>';
 					else
-						data.elements = '<'+html_tag+' element="'+filename+'">{{ data.'+filename+'|raw }}</'+html_tag+'>';
+						data.elements = '<'+html_tag+' '+(config.language.bem?'element':'class')+'="'+filename+'">{{ '+(config.language.data?'data.':'')+filename+' }}</'+html_tag+'>';
 
 					if( content === false )
-						data.elements = data.elements.replace('{{ data.'+filename+'|raw }}', '');
+						data.elements = data.elements.replace('{{ '+(config.language.data?'data.':'')+filename+' }}', '');
 
 					data.fields = self.generateACFComponent(modifiers.type, name);
 				}
@@ -686,7 +766,9 @@ var wml = (function (config) {
 				elements: '',
 				content: '',
 				components: '',
-				fields: []
+				fields: [],
+				components_list: [],
+				components_import: []
 			});
 		}
 	};
@@ -703,7 +785,7 @@ var wml = (function (config) {
 				var filePath = Object.keys(data)[0];
 				var content = data[filePath];
 
-				filePath = config.outputPath + filePath;
+				filePath = config.output + filePath;
 
 				try {
 					var dirname = path.dirname(filePath);
@@ -745,9 +827,23 @@ var wml = (function (config) {
 		});
 	};
 
+	deleteFolderRecursive(config.output);
+
 });
 
+if (require.main === module) {
 
-module.exports = function (config) {
-	return new wml(config);
-};
+	var args = require('minimist')(process.argv.slice(2));
+
+	new wml(args).process().then(function(result) {
+		console.log('Export successfull '+result);
+	}).catch(function(error) {
+		console.log(error);
+	});
+}
+else{
+
+	module.exports = function (config) {
+		return new wml(config);
+	};
+}

@@ -1,27 +1,10 @@
 /* jshint mocha: true, maxlen: false */
 var wml = require('../index.js'),
-	expect = require('chai').expect,
-	fs = require('fs');
+	expect = require('chai').expect;
 
-function deleteFolderRecursive(path) {
-	if( fs.existsSync(path) ) {
-		fs.readdirSync(path).forEach(function(file,index){
-			var curPath = path + "/" + file;
-			if(fs.lstatSync(curPath).isDirectory()) {
-				deleteFolderRecursive(curPath);
-			} else {
-				fs.unlinkSync(curPath);
-			}
-		});
-		fs.rmdirSync(path);
-	}
-}
 
-deleteFolderRecursive('./export');
-
-function test(input, params, output, done) {
-	wml(params)
-		.process(input)
+function test(params, output, done) {
+	wml(params).process()
 		.then(function(result) {
            expect(output).to.eql(result);
 			done();
@@ -35,6 +18,6 @@ describe('Test for pages', function() {
 
     it('Test complex generation', function(done) {
        // test('./test/complex.wml', {outputPath:'./export', design:'component'}, true, done);
-        test('./test/complex.wml', {outputPath:'./export', design:'atomic'}, true, done);
+        test({inputPath:'./test/complex.wml', outputPath:'./export', design:'atomic'}, true, done);
     });
 });
