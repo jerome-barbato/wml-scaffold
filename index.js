@@ -476,7 +476,7 @@ var wml = (function (config) {
 								.replace('<elements></elements>', data.elements)
 								.replace('<components></components>', data.components)
 								.replace('import components;', data.components_import)
-								.replace('components:{ },', 'components:{'+data.components_list+'}')
+								.replace('components:{ },', 'components:{'+data.components_list+'},')
 								.replace('&__#{$elements}{ }', data.scss)
 								.replace('.#{$elements}{ }', data.scss)
 								.replace(/\n\t\n/, '\n\t');
