@@ -229,7 +229,7 @@ var wml = (function (config) {
 
 					content = content.replace('<components></components>', components.join('\n\t'));
 					content = content.replace('import components;', components_import.join('\n\t'));
-					content = content.replace('components:{ },', 'components:{'+components_list.join(',')+'}');
+					content = content.replace('components:{ },', 'components:{'+components_list.join(',')+'},');
 
 					var folder = 'page';
 
