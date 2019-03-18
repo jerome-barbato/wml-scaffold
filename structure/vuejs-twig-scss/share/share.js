@@ -23,8 +23,7 @@ Vue.component('share', {
 			switch (this.social) {
 
 				case 'facebook':
-					console.log(this.title);
-					this.url = 'http://www.facebook.com/sharer.php?u=' + encodeURIComponent(this.link) + '&t=' + this.title;
+					this.url = 'http://www.facebook.com/sharer.php?u=' + encodeURIComponent(this.link);
 					this._openWindow(this.url, 'facebookwindow', 533, 355);
 					break;
 

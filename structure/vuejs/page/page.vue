@@ -10,7 +10,7 @@
 
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 
 </style>
 
@@ -25,6 +25,18 @@
 		},
 		methods:{ },
 		components:{ },
-		computed : { }
+		computed : { },
+		head: {
+			title(){
+				return {
+					inner: 'Title'
+				}
+			},
+		meta() {
+			return [
+				{ name: 'description', content: 'Description lorem ipsum' },
+				{ property: 'og:image', content: '/static/img/placeholder.jpg' },
+			]
+		}
 	}
 </script>
