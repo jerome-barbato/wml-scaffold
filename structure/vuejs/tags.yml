@@ -17,11 +17,6 @@ cta:
   is: button
   html: '<tag class="cta" :href="data">{{ title }}</tag>'
 
-media:
-  is: media
-  data: "{image:'/tmp/placeholder.jpg', video:'/tmp/placeholder.mp4'}"
-  html: '<media image="image" video="video"></media>'
-
 date: time
 
 image:

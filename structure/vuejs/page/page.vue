@@ -20,23 +20,23 @@
 
 	export default {
 		data() {
-			return {
-			}
+			return {}
 		},
-		methods:{ },
-		components:{ },
-		computed : { },
+		methods: {},
+		components: {},
+		computed: {},
 		head: {
-			title(){
+			title() {
 				return {
 					inner: 'Title'
 				}
 			},
-		meta() {
-			return [
-				{ name: 'description', content: 'Description lorem ipsum' },
-				{ property: 'og:image', content: '/static/img/placeholder.jpg' },
-			]
+			meta() {
+				return [
+					{name: 'description', content: 'Description lorem ipsum'},
+					{property: 'og:image', content: '/static/img/placeholder.jpg'}
+				]
+			}
 		}
 	}
 </script>

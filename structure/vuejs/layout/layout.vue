@@ -5,7 +5,7 @@
 		<components></components>
 
 		<transition :name="transitionDirection">
-			<router-view name="view"></router-view>
+			<router-view name="view" :key="$route.fullPath"></router-view>
 		</transition>
 
 	</div>
