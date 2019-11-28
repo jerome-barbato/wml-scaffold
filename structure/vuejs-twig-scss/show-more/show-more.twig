@@ -1,0 +1,5 @@
+<div block="{{ name }}">
+	<show-more label-open="{{ data.open|default('En savoir plus') }}" label-close="{{ data.open|default('Fermer') }}">
+		<slot><p>{{ data.text|raw }}</p></slot>
+	</show-more>
+</div>

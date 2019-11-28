@@ -1,136 +1,79 @@
 layout:
   - default:
-      - $header:
-          - $logo
-          - $header cta|extend(cta)
-          - $burger
+    - $sidebar:
+      - logo
+      - title
       - $nav
-      - $breadcrumb|extend(nav)
-      - $footer:
-          - $logo
-          - $infos|extend(wysiwyg)
-          - $subsidiaries:
-              - $subsidiary|loop|extend(logo)
-          - $social
-          - $footer nav|extend(nav)
-  - home:
-      - $header
-      - $nav
-      - $footer
+    - $playground:
+      - title
+      - text
+      - link
+    - $footer:
+      - logo
+      - link
 
-
-#home:
-#  - layout: home
-#  - $call to action:
-#      - title
-#      - subtitle
-#      - cta
-#  - $push next:
-#      - title
-#      - image
-#      - text
-#      - cta
-#  - $push posts:
-#      - title
-#      - $push post|loop:
-#          - icon
-#          - title
-#          - text
-#          - link
-#  - $keyfacts:
-#      - title
-#      - $keyfact|loop:
-#          - image
-#          - title
-#          - text
-#          - link
-#  - $userpath:
-#      - title
-#      - $path|loop:
-#          - icon
-#          - title
-#          - text
-#          - cta
-#
-#editorial:
-#  - layout: default
-#  - $full image:
-#      - title
-#      - wysiwyg
-#      - cta
-#      - image
-#  - $article:
-#      - title
-#      - subtitle
-#      - wysiwyg
-#      - image
-#  - $text image:
-#      - title
-#      - subtitle
-#      - wysiwyg
-#      - image
-#  - $wysiwyg
-#  - $facts:
-#      - title
-#      - $fact|loop:
-#          - image
-#          - title
-#          - list
-#  - $columns:
-#      $column|loop:
-#        - title
-#        - wysiwyg
-#        - cta
-#
-#single-offer-service:
-#  - layout: default
-#  - $full image summary:
-#      - $full image
-#      - $summary:
-#          - title
-#          - $item|loop:
-#              - icon
-#              - text
-#  - $products comparison:
-#      - title
-#  #    - $table:
-#  #      - theader
-#  #        label
-#  #        product_name|extend(cta)
-#  #      - line|loop:
-#  #        label
-#  #        (bool OR text OR float)|loop
-#  - $download summary:
-#      - icon
-#      - title
-#      - download_links|loop:
-#          - $item
-#          - link
-#
-#archive-offer-service:
-#  - layout: default
-#  - $full image
-#  - $posts_list:
-#      - $list
-#      - $post|loop:
-#          - icon
-#          - title
-#          - text
-#          - link
-#  - $keyfacts
-#
-#contact:
-#  - layout: default
-#  - $contact_form:
-#      - title
-#      - image
-#      - form
-#  - $keyfacts
-
-test:
+home:
   - layout: default
-  - $test_sliders|extend(slider):
-    - $slide_test:
-        - title
-        - img
-    - $table_test|extend(table)
+  - $hero:
+    - item|loop(3):
+      - title
+      - link
+      - image
+    - logo
+  - $full-image:
+    - image
+  - $clients:
+    - heading
+    - client|loop:
+      - title
+      - link
+      - image
+    - footer|extend(text)
+  - $services:
+    - heading
+    - service|loop(4):
+      - title
+      - link
+      - icon
+  - $full-text:
+    - heading
+    - title
+    - wysiwyg
+    - link
+    - background
+
+page:
+  - layout: default
+  - $anchor
+  - $list:
+    - title
+    - item|extend(title)|loop
+  - $text-image:
+    - heading
+    - title
+    - wysiwyg
+    - image
+    - lien
+  - $slider-clients:
+    - heading
+    - client|loop:
+      - image
+      - logo
+  - $mosaic:
+    - column|loop(4):
+      - title
+      - wysiwyg
+      - image
+  - $content:
+    - title
+    - image
+    - wysiwyg
+  - $contact:
+    - title
+    - item|loop:
+      - name
+      - phone
+      - email
+  - $form:
+    - title
+    - form

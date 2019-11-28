@@ -1,0 +1,54 @@
+{
+	"key": "",
+	"title": "Gmap",
+	"fields": [
+		{
+			"key": "field_5ce7f58b01677",
+			"label": "",
+			"name": "position",
+			"type": "google_map",
+			"instructions": "",
+			"required": 0,
+			"conditional_logic": 0,
+			"wrapper": {
+				"width": "",
+				"class": "",
+				"id": ""
+			},
+			"center_lat": "",
+			"center_lng": "",
+			"zoom": "",
+			"height": ""
+		},
+		{
+			"key": "field_5d43faed16ddd",
+			"label": "Zoom",
+			"name": "zoom",
+			"type": "number",
+			"instructions": "",
+			"required": 0,
+			"conditional_logic": 0,
+			"wrapper": {
+				"width": "",
+				"class": "",
+				"id": ""
+			},
+			"default_value": 6,
+			"placeholder": "",
+			"prepend": "",
+			"append": "",
+			"min": "",
+			"max": 26,
+			"step": ""
+		}
+	],
+	"menu_order": 1,
+	"position": "normal",
+	"style": "default",
+	"label_placement": "top",
+	"instruction_placement": "label",
+	"hide_on_screen": "",
+	"active": 1,
+	"description": "",
+	"is_acf_component": 0
+}

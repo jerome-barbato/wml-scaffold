@@ -3,4 +3,16 @@ body.layout-#{$name} {
 	#app{
 		width: 100%; overflow: hidden; position: relative;
 	}
+
+	body {
+		overflow: hidden; overflow-y: auto;
+	}
+
+	@include scrollbar(10px, #888, #e2e4eb, 0);
+
+	.container {
+		max-width: $container-w; position: relative; width: 95%; margin: 0 auto;
+		padding: 0 $grid-gap; z-index: 1; @include clearfix();
+		@media #{$to-phone} { padding: 0 }
+	}
 }

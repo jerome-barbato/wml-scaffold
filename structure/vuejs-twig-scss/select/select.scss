@@ -1,0 +1,31 @@
+.a-select{
+
+  position: relative; text-align: left;
+
+  &__selected{
+    padding: 1.6rem 2.2rem; width: 100%; min-height: 5.4rem; border: solid 1px #ccc;
+    background: white; cursor: default;
+  }
+
+  &__options{ position: absolute; background: white; width: 100%; top: 100%; left: 0; z-index: -1;
+    transition: allow(opacity transform 20s); border: solid 1px #ccc; border-top: none;
+  }
+
+  &__option{
+    padding: 1rem; cursor: pointer; transition: allow(background color);
+
+    &--selected{ background: $c-primary; color: white }
+
+    .no-touch & {
+      &:hover{ background: $c-primary; color: white }
+    }
+  }
+
+  @media #{$to-tablet}{
+    &__selected,&__options{ display: none }
+  }
+
+  @media #{$from-tablet}{
+    select{ position: absolute; left: 0; width: 100%; top: 0; height: 100%; z-index: -10000; opacity: 0; pointer-events: none; }
+  }
+}

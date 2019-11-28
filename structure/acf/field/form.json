@@ -1,0 +1,333 @@
+{
+	"key": "",
+	"title": "Form",
+	"fields": [
+		{
+			"key": "field_5d02250535468",
+			"label": "Form",
+			"name": "form",
+			"type": "repeater",
+			"instructions": "",
+			"required": 0,
+			"conditional_logic": 0,
+			"wrapper": {
+				"width": "",
+				"class": "",
+				"id": ""
+			},
+			"collapsed": "",
+			"min": 0,
+			"max": 0,
+			"layout": "block",
+			"button_label": "Ajouter un élément",
+			"sub_fields": [
+				{
+					"key": "field_5d02258635469",
+					"label": "Type",
+					"name": "type",
+					"type": "select",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": 0,
+					"wrapper": {
+						"width": "",
+						"class": "",
+						"id": ""
+					},
+					"choices": {
+						"text": "text",
+						"textarea": "textarea",
+						"number": "number",
+						"tel": "tel",
+						"email": "email",
+						"select": "select",
+						"mention": "mention",
+						"submit": "submit"
+					},
+					"default_value": [
+						"text"
+					],
+					"allow_null": 0,
+					"multiple": 0,
+					"ui": 0,
+					"return_format": "value",
+					"ajax": 0,
+					"placeholder": ""
+				},
+				{
+					"key": "field_5d0225d13546a",
+					"label": "Name",
+					"name": "name",
+					"type": "text",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": [
+						[
+							{
+								"field": "field_5d02258635469",
+								"operator": "!=",
+								"value": "mentions"
+							},
+							{
+								"field": "field_5d02258635469",
+								"operator": "!=",
+								"value": "submit"
+							}
+						]
+					],
+					"wrapper": {
+						"width": "50",
+						"class": "",
+						"id": ""
+					},
+					"default_value": "",
+					"placeholder": "",
+					"prepend": "",
+					"append": "",
+					"maxlength": ""
+				},
+				{
+					"key": "field_5d0225d63546b",
+					"label": "Label",
+					"name": "label",
+					"type": "text",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": [
+						[
+							{
+								"field": "field_5d02258635469",
+								"operator": "!=",
+								"value": "submit"
+							},
+							{
+								"field": "field_5d02258635469",
+								"operator": "!=",
+								"value": "mention"
+							}
+						]
+					],
+					"wrapper": {
+						"width": "50",
+						"class": "",
+						"id": ""
+					},
+					"default_value": "",
+					"placeholder": "",
+					"prepend": "",
+					"append": "",
+					"maxlength": ""
+				},
+				{
+					"key": "field_5d02278bc49f1",
+					"label": "",
+					"name": "required",
+					"type": "true_false",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": [
+						[
+							{
+								"field": "field_5d02258635469",
+								"operator": "!=",
+								"value": "mention"
+							},
+							{
+								"field": "field_5d02258635469",
+								"operator": "!=",
+								"value": "submit"
+							}
+						]
+					],
+					"wrapper": {
+						"width": "50",
+						"class": "",
+						"id": ""
+					},
+					"message": "Required",
+					"default_value": 0,
+					"ui": 0,
+					"ui_on_text": "",
+					"ui_off_text": ""
+				},
+				{
+					"key": "field_5d0225e73546c",
+					"label": "Class",
+					"name": "class",
+					"type": "text",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": 0,
+					"wrapper": {
+						"width": "50",
+						"class": "",
+						"id": ""
+					},
+					"default_value": "",
+					"placeholder": "",
+					"prepend": "",
+					"append": "",
+					"maxlength": ""
+				},
+				{
+					"key": "field_5d0226cd56a9a",
+					"label": "Select options",
+					"name": "options",
+					"type": "repeater",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": [
+						[
+							{
+								"field": "field_5d02258635469",
+								"operator": "==",
+								"value": "select"
+							}
+						]
+					],
+					"wrapper": {
+						"width": "",
+						"class": "",
+						"id": ""
+					},
+					"collapsed": "",
+					"min": 0,
+					"max": 0,
+					"layout": "block",
+					"button_label": "Ajouter une option",
+					"sub_fields": [
+						{
+							"key": "field_5d0226f256a9b",
+							"label": "Label",
+							"name": "label",
+							"type": "text",
+							"instructions": "",
+							"required": 0,
+							"conditional_logic": 0,
+							"wrapper": {
+								"width": "50",
+								"class": "",
+								"id": ""
+							},
+							"default_value": "",
+							"placeholder": "",
+							"prepend": "",
+							"append": "",
+							"maxlength": ""
+						},
+						{
+							"key": "field_5d0226f956a9c",
+							"label": "Value",
+							"name": "value",
+							"type": "text",
+							"instructions": "",
+							"required": 0,
+							"conditional_logic": 0,
+							"wrapper": {
+								"width": "50",
+								"class": "",
+								"id": ""
+							},
+							"default_value": "",
+							"placeholder": "",
+							"prepend": "",
+							"append": "",
+							"maxlength": ""
+						}
+					]
+				},
+				{
+					"key": "field_5d0251daceb6c",
+					"label": "Text",
+					"name": "text",
+					"type": "textarea",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": [
+						[
+							{
+								"field": "field_5d02258635469",
+								"operator": "==",
+								"value": "mention"
+							}
+						]
+					],
+					"wrapper": {
+						"width": "",
+						"class": "",
+						"id": ""
+					},
+					"default_value": "",
+					"placeholder": "",
+					"maxlength": "",
+					"rows": 3,
+					"new_lines": "br"
+				},
+				{
+					"key": "field_5d0252c714eb8",
+					"label": "Value",
+					"name": "value",
+					"type": "text",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": [
+						[
+							{
+								"field": "field_5d02258635469",
+								"operator": "==",
+								"value": "submit"
+							}
+						]
+					],
+					"wrapper": {
+						"width": "",
+						"class": "",
+						"id": ""
+					},
+					"default_value": "",
+					"placeholder": "",
+					"prepend": "",
+					"append": "",
+					"maxlength": ""
+				},
+				{
+					"key": "field_5d089e41f98a0",
+					"label": "Value",
+					"name": "value",
+					"type": "textarea",
+					"instructions": "",
+					"required": 0,
+					"conditional_logic": [
+						[
+							{
+								"field": "field_5d02258635469",
+								"operator": "==",
+								"value": "textarea"
+							}
+						]
+					],
+					"wrapper": {
+						"width": "",
+						"class": "",
+						"id": ""
+					},
+					"default_value": "",
+					"placeholder": "",
+					"maxlength": "",
+					"rows": 3,
+					"new_lines": ""
+				}
+			]
+		}
+	],
+	"menu_order": 0,
+	"position": "normal",
+	"style": "default",
+	"label_placement": "top",
+	"instruction_placement": "label",
+	"hide_on_screen": "",
+	"active": 1,
+	"description": "",
+	"is_acf_component": 1,
+	"slug": "form"
+}
