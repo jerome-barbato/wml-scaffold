@@ -1,6 +1,6 @@
 <template>
 
-	<main class="page-{{ name }}">
+	<main class="page-{{ name }}" v-if="page">
 
 		<div class="container">
 
@@ -24,7 +24,14 @@
 		},
 		methods: {},
 		components: {},
-		computed: {},
+		computed:{
+			page(){
+				return this.$store.getters.page(this.$route.path);
+			},
+			root(){
+				return Vue.http.options.root
+			}
+		},
 		head: {
 			title() {
 				return {
