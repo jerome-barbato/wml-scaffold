@@ -30,7 +30,7 @@
 
 	<link href="{{ asset('/theme/style.css') }}" media="all" rel="stylesheet" type="text/css"/>
 
-	{% block head %}{{ system.head|default()|raw }}{% endblock head %}
+	{% block head %}{{ wp_head() }}{% endblock head %}
 </head>
 
 <body class="layout-{{ name }} loading {{ body_class|default() }}">
