@@ -1,0 +1,46 @@
+.#{$name}{
+
+  iframe{ width: 100% }
+
+  hr { height: 0; border: 0; border-bottom: 1px solid }
+
+  strong { font-weight: bold }
+
+  h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    & + *, * + & { margin-top: 1em }
+  }
+
+  h1{ font-size: 4rem }
+  h2{ font-size: 3rem }
+  h3{ font-size: 2rem }
+  h4{ font-size: 1.6rem }
+  h5{ font-size: 1.4rem }
+  h6{ font-size: 1.2rem }
+
+  a{ text-decoration: underline }
+
+  p {
+    & + * { margin-top: 2em }
+    & + p { margin-top: 1em }
+  }
+
+  ul{ list-style: disc }
+
+  ul, ol {
+    li + li { margin-top: 1em }
+  }
+
+  ol {
+    counter-reset: my-count;
+    li {
+      counter-increment: my-count; padding-left: 2em;
+      &:before { content: counter(my-count) "."; font-size: 0.9em }
+    }
+  }
+
+  .wp-caption{ width: 100%!important; margin-bottom: 1rem }
+  .wp-caption-text { text-align: center; margin-top: 1em }
+
+  img.size-full { width: 100%; height: auto; margin-top: 1em }
+}

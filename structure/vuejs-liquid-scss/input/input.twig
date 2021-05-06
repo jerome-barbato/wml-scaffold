@@ -1,0 +1,157 @@
+{% if input.type == "hidden" %}
+
+    <input type="hidden" name="{{ input.name }}" v-model="{{ input.model|default(input.name|default()) }}" value="{{ input.value }}">
+
+{% else %}
+
+    <div block="a-input" mod="{{ input.type }}" class="{{ input.class|default('') }}{{ input.required|default() ? ' a-input--required' }}">
+
+        {% if input.type != 'label' %}
+
+            {% if input.type in ['text', 'tel', 'password', 'url','email','number'] %}
+
+                <input type="{{ input.type }}" placeholder="{{ input.placeholder|default() }}" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" protect="{{ input.required|default() ? 'required' }}" v-empty v-focus/>
+
+            {% elseif input.type == 'formated_number' %}
+
+                <input type="hidden" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}"/>
+                <input type="text" v-number placeholder="{{ input.placeholder|default() }}" v-model="{{ input.model|default(input.name|default()) }}_display" name="{{ input.name|default() }}_display" protect="{{ input.required|default() ? 'required' }}" v-empty v-focus/>
+
+            {% elseif input.type == 'date' %}
+
+                <div element="date">
+
+                    <input type="text" placeholder="{{ input.placeholder|default() }}" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" value="{{ input.value|default() }}" protect="{{ input.required|default() ? 'required' }}" v-focus>
+                </div>
+
+            {% elseif input.type == 'textarea' %}
+
+                <textarea rows="{{ input.rows|default('10') }}" placeholder="{{ input.placeholder|default() }}" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" maxlength="{{ input.maxlength|default(800) }}" protect="{{ input.required|default() ? 'required' }}" v-empty v-focus>{{ input.value|default() }}</textarea>
+
+            {% elseif input.type == 'autocomplete' %}
+
+                <autocomplete api="{{ input.api }}" label="{{ input.label|default() }}" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" ismultiple="{{ input.multiple|default() }}" isrequired="{{ input.required|default() }}"></autocomplete>
+
+            {% elseif input.type == 'select' %}
+
+                <custom-select :options="{{ input.options|json_encode }}" label="{{ input.label|default() }}" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" ismultiple="{{ input.multiple|default() }}" isrequired="{{ input.required|default() }}" singular="{{ input.singular|default() }}" plural="{{ input.plural|default() }}" noresult="{{ input.noresult|default() }}"></custom-select>
+
+            {% elseif input.type == 'select_multiple' %}
+
+                <div element="select_multiple">
+
+                    {% for select in input.selects %}
+
+                        <div element="content">
+
+                            {% if select.label|default() %}
+                                <label>{{ select.label }}</label>
+                            {% endif %}
+
+                            {% include 'shared/input.twig' with {
+                                input : {
+                                    name : select.name|default(),
+                                    type : 'select',
+                                    value: select.value|default(),
+                                    label : false,
+                                    options : select.options,
+                                    required : select.required|default(input.required|default())
+                                }}%}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            {% elseif input.type == 'date_range' %}
+
+                <div element="date_range">
+
+                    <div element="content">
+
+                        <label>de</label>
+
+                        {% include 'shared/input.twig' with {
+                            input:{ type:'date', name: input.name|default()~'_start' }
+                        } %}
+                    </div>
+
+                    <div element="content">
+
+                        <label>à</label>
+
+                        {% include 'shared/input.twig' with {
+                            input:{ type:'date', name: input.name|default()~'_end' }
+                        } %}
+                    </div>
+                </div>
+
+            {% elseif input.type == 'checkbox' %}
+
+                {% if input.options|default() %}
+
+                    {% for option in input.options %}
+                        <label element="checkbox">
+                            <input type="checkbox" v-model="{{ option.model|default(option.name|default()) }}" name="{{ option.name|default() }}" value="1" v-focus>
+                            <span>{{ option.label|raw }}</span>
+                            {{ option.extra|default()|raw }}
+                        </label>
+                    {% endfor %}
+
+                {% else %}
+
+                    <label element="label">
+
+                        <div element="checkbox">
+                            <input type="checkbox" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" value="1" v-focus protect="{{ input.required|default() ? 'required' }}">
+                        </div>
+                        {{ input.label|raw }}<span>{{ input.required|default() ? ' *' }}</span>
+                    </label>
+                {% endif %}
+
+            {% elseif input.type == 'radio' %}
+
+                {% for option in input.options %}
+                    <div element="radio">
+                        <label>
+                            <input type="radio" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" protect="{{ option.checked|default() ? 'checked' }}{{ input.required|default() ? 'required' }}" value="{{ option.value|default() }}" v-focus>
+                            <span>{{ option.label|raw }}</span>
+                        </label>
+                    </div>
+                {% endfor %}
+
+            {% elseif input.type == 'boolean' %}
+
+                <label element="radio">
+                    <input type="radio" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" protect="{{ input.value|default() ? 'checked' }}{{ input.required|default() ? 'required' }}" value="1" v-focus>
+                    <span>Oui</span>
+                </label>
+
+                <label element="radio">
+                    <input type="radio" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" protect="{{ not input.value|default() ? 'checked' }}{{ input.required|default() ? 'required' }}" value="0" v-focus>
+                    <span>Non</span>
+                </label>
+
+            {% elseif input.type == 'file' %}
+
+                <div element="file" v-upload>
+
+                    <a class="button button--primary" icon="upload">
+                        <span>{{ input.value|default('Parcourir') }}</span>
+                        <input type="file" v-model="{{ input.model|default(input.name|default()) }}" name="{{ input.name|default() }}" accept="{{ input.accept|default() }}" protect="{{ input.required|default() ? 'required' }}" v-focus>
+                    </a>
+                </div>
+
+            {% elseif input.type == 'submit' %}
+                <button type="submit" class="button button--primary" id="{{ input.id|default() }}">{{ input.value|default('Valider') }}</button>
+            {% endif %}
+
+        {% endif %}
+
+        {% if input.label|default() and input.type != 'checkbox' %}
+
+            <label element="label">
+                {{ input.label|raw }}<span>{{ input.required|default() ? ' *' }}</span>
+            </label>
+        {% endif %}
+    </div>
+
+{% endif %}

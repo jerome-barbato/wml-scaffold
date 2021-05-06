@@ -1,0 +1,15 @@
+{% set data = data|default({
+		title: __('Ici'),
+		position:
+		{
+			lat: '43.6981419',
+			lng: '7.2847173,17',
+			address: '22 B boulevard Stalingrad 06300 Nice'
+		},
+		zoom: '10',
+		icon: 'marker.png'
+}) %}
+
+<div block="{{ name }}">
+	<gmap lat="{{ data.position.lat|default() }}" lng="{{ data.position.lng|default() }}" title="{{data.title|default() }}" address="{{ data.position.address|default() }}" zoom="{{ data.zoom|default('6') }}" icon="{{ data.icon|default() }}"></gmap>
+</div>

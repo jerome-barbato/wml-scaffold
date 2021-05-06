@@ -1,0 +1,5 @@
+<ul block="{{ name }}">
+    {% for item in data %}
+        <li element="item">{{ item|raw }}</li>
+    {% endfor %}
+</ul>

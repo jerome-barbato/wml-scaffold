@@ -1,0 +1,48 @@
+.#{$name}{
+	$c: &;
+
+	display: flex; align-items: center; margin-top: 9rem;
+
+	&__title{ font-size: 2rem; letter-spacing: 1px; text-transform: uppercase;
+
+		& + #{$c}__link{
+			margin-left: 3rem;
+		}
+	}
+
+	&__link {
+		position: relative; line-height: 1; cursor: pointer; transition: allow(color);
+		color: $c-primary; font-size: 2.6rem;
+
+		& + & { margin-left: 3rem }
+
+		&.facebook{ font-size: 2.4rem }
+		&.linkedin{ font-size: 3.2rem }
+
+		.no-touch &:hover{ color: $c-secondary }
+	}
+
+	@media #{$to-phone}{
+
+		flex-wrap: wrap; justify-content: center;
+
+		&__title{
+			flex-basis: 100%; text-align: center; margin-bottom: 2rem;
+
+			& + #{$c}__link{
+				margin-left: 0
+			}
+		}
+
+		&__link{
+			font-size: 1.7rem;
+
+			&.twitter{ font-size: 1.9rem }
+
+			&.mail{ font-size: 2rem }
+		}
+	}
+
+}
+
+

@@ -1,14 +1,14 @@
 
-var yaml       = require('js-yaml');
-var fs         = require('fs');
-var path       = require('path');
-var mkdir      = require('mkdirp');
-var _camelCase = require('lodash.camelcase');
-var _snakeCase = require('lodash.snakecase');
+const yaml       = require('js-yaml');
+const fs         = require('fs');
+const path       = require('path');
+const mkdir      = require('mkdirp');
+const _camelCase = require('lodash.camelcase');
+const _snakeCase = require('lodash.snakecase');
 
-var wml = (function (config) {
+const wml = (function (config) {
 
-	var self = this;
+	let self = this;
 
 	wml.files = [];
 	wml.uid = {};
@@ -20,9 +20,10 @@ var wml = (function (config) {
 			path: 'structure/acf',
 			ignore: ['close', 'previous', 'next', 'scroll_down', 'header', 'footer']
 		},
-		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs
-		design: 'atomic', //component|atomic
+		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs|vuejs-liquid-scss
+		design: 'atomic', //component|atomic|shopify
 		atomic:['page','organism','molecule','atom'],
+		shopify:['templates','sections','snippets'],
 		alias: {
 			'description': 'text',
 			'breadcrumb': 'nav',
@@ -46,7 +47,7 @@ var wml = (function (config) {
 	function deleteFolderRecursive(path) {
 		if( fs.existsSync(path) ) {
 			fs.readdirSync(path).forEach(function(file,index){
-				var curPath = path + "/" + file;
+				let curPath = path + "/" + file;
 				if(fs.lstatSync(curPath).isDirectory()) {
 					deleteFolderRecursive(curPath);
 				} else {
@@ -91,9 +92,9 @@ var wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				var filePath = '.uniqid';
+				let filePath = '.uniqid';
 				if( fs.existsSync(filePath) ) {
-					var uid = yaml.safeLoad(fs.readFileSync(filePath, 'utf8'));
+					let uid = yaml.load(fs.readFileSync(filePath, 'utf8'));
 					resolve(uid);
 				}
 				else {
@@ -125,7 +126,7 @@ var wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				var tags = yaml.safeLoad(fs.readFileSync('structure/'+config.type+'/tags.yml', 'utf8'));
+				let tags = yaml.load(fs.readFileSync('structure/'+config.type+'/tags.yml', 'utf8'));
 				resolve(tags);
 
 			} catch (e) {
@@ -139,7 +140,7 @@ var wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				var tags = yaml.safeLoad(fs.readFileSync('structure/'+config.type+'/language.yml', 'utf8'));
+				let tags = yaml.load(fs.readFileSync('structure/'+config.type+'/language.yml', 'utf8'));
 				resolve(tags);
 
 			} catch (e) {
@@ -163,7 +164,7 @@ var wml = (function (config) {
 	wml.prototype.generateLayout = function(structure){
 
 		return Promise.all(structure.map(function(layout){
-			var name = Object.keys(layout)[0];
+			let name = Object.keys(layout)[0];
 			return self.generatePage(name, layout[name], 'layout');
 		}));
 	};
@@ -176,14 +177,14 @@ var wml = (function (config) {
 
 				name = _snakeCase(name);
 
-				var files = [];
+				let files = [];
 
-				var structure_path = 'structure/'+config.type+'/'+type;
-				var structure_files = fs.readdirSync(structure_path);
+				let structure_path = 'structure/'+config.type+'/'+type;
+				let structure_files = fs.readdirSync(structure_path);
 
 				structure_files.forEach(function(structure_file){
 
-					var content = fs.readFileSync(structure_path+'/'+structure_file, 'utf8');
+					let content = fs.readFileSync(structure_path+'/'+structure_file, 'utf8');
 
 					content = content
 						.replace(/{{ name }}/g, name)
@@ -191,7 +192,7 @@ var wml = (function (config) {
 
 					if( type === 'page' ) {
 						if( isArray(structure) && isObject(structure[0]) && 'layout' in structure[0]) {
-							var layout_name = _snakeCase(structure[0].layout);
+							let layout_name = _snakeCase(structure[0].layout);
 							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'page/layout/'+layout_name+'.twig\' %}\n');
 						}
 						else {
@@ -199,25 +200,25 @@ var wml = (function (config) {
 						}
 					}
 
-					var components = [];
-					var components_import = [];
-					var components_list = [];
+					let components = [];
+					let components_import = [];
+					let components_list = [];
 
 					if( isArray(structure) ) {
 						structure.forEach(function(component){
-							var key = ( isObject(component) ? Object.keys(component)[0] : component).split('|');
+							let key = ( isObject(component) ? Object.keys(component)[0] : component).split('|');
 
 							if( key[0] !== 'layout') {
 
-								var component_name = _snakeCase(key[0]);
+								let component_name = _snakeCase(key[0]);
 
 								components_import.push('import '+_camelCase(component_name)+' from "@/component/'+_snakeCase(component_name)+'";');
 								components_list.push(_camelCase(component_name));
 
-								var folder = 'component';
+								let folder = 'component';
 
-								if( config.design === 'atomic' )
-									folder = config.atomic[1];
+								if( config.design != 'component' )
+									folder = config[config.design][1];
 
 								if( config.type === 'vuejs-twig-scss')
 									components.push("{% include '"+folder+"/"+component_name+".twig' %}");
@@ -231,17 +232,17 @@ var wml = (function (config) {
 					content = content.replace('import components;', components_import.join('\n\t'));
 					content = content.replace('components:{ },', 'components:{'+components_list.join(',')+'},');
 
-					var folder = 'page';
+					let folder = 'page';
 
-					if( config.design === 'atomic' )
-						folder = config.atomic[0];
+					if( config.design != 'component' )
+						folder = config[config.design][0];
 
 					if( type === 'layout')
 						folder += '/layout';
 
-					var filepath = '/design_system/' + folder + '/' + (structure_files.length > 1 ? name + '/' + name : name ) + path.extname(structure_file);
+					let filepath = '/design_system/' + folder + '/' + (structure_files.length > 1 ? name + '/' + name : name ) + path.extname(structure_file);
 
-					var file = {};
+					let file = {};
 					file[filepath] = content;
 
 					files.push(file);
@@ -267,7 +268,7 @@ var wml = (function (config) {
 
 	function processData(data, indent){
 
-		var _data = {
+		let _data = {
 			scss: [],
 			elements: [],
 			content: [],
@@ -302,8 +303,8 @@ var wml = (function (config) {
 
 	function format(array, after, before, last) {
 
-		var formatted = '';
-		var i = 1;
+		let formatted = '';
+		let i = 1;
 
 		array.map(function(value){
 			formatted += ( isDefined(before) ? before : '') + value + (isDefined(after) && i < array.length ? after : '');
@@ -324,13 +325,13 @@ var wml = (function (config) {
 
 	wml.prototype.getModifiers = function(key){
 
-		var definition = key.split('|');
-		var name = definition[0].replace('$', '');
+		let definition = key.split('|');
+		let name = definition[0].replace('$', '');
 
 		if( hasKey(config, 'rewrite') && hasKey(config.rewrite, name) )
 			name = config.rewrite[name];
 
-		var modifiers = {
+		let modifiers = {
 			name: name,
 			type: _snakeCase(name),
 			extend: false,
@@ -370,7 +371,7 @@ var wml = (function (config) {
 		if( hasKey(wml.uid, prefix+key) )
 			return wml.uid[prefix+key];
 
-		var id = getUniqid( prefix );
+		let id = getUniqid( prefix );
 
 		wml.uid[prefix+key] = id;
 
@@ -384,8 +385,8 @@ var wml = (function (config) {
 		if ( !isDefined(prefix) )
 			prefix = "";
 
-		var retId;
-		var formatSeed = function (seed, reqWidth) {
+		let retId;
+		let formatSeed = function (seed, reqWidth) {
 			seed = parseInt(seed, 10).toString(16); // to hex str
 			if (reqWidth < seed.length) { // so long we split
 				return seed.slice(seed.length - reqWidth);
@@ -423,50 +424,50 @@ var wml = (function (config) {
 
 			try {
 
-				var key = isObject(component) ? Object.keys(component)[0] : component;
-				var modifiers = self.getModifiers(key);
-				var name = modifiers.name;
-				var filename = _snakeCase(name);
+				let key = isObject(component) ? Object.keys(component)[0] : component;
+				let modifiers = self.getModifiers(key);
+				let name = modifiers.name;
+				let filename = _snakeCase(name);
 
 				if( name !== 'layout') {
 
-					var structure_path = modifiers.extend ? config.output + '/component/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
+					let structure_path = modifiers.extend ? config.output + '/component/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
 
 					if( !fs.existsSync(structure_path) )
 						structure_path = 'structure/' + config.type + '/default';
 
-					var structure_files = fs.readdirSync(structure_path);
+					let structure_files = fs.readdirSync(structure_path);
 
-					var elements = isObject(component) ? component[key] : false;
+					let elements = isObject(component) ? component[key] : false;
 
 					self.generateData(elements, depth+1).then(function(data) {
 
-						var files = [];
+						let files = [];
 
-						var tag = modifiers.tag ? modifiers.tag : ( hasKey(config.tags, modifiers.type ) ? config.tags[modifiers.type] : config.tags['default'] );
+						let tag = modifiers.tag ? modifiers.tag : ( hasKey(config.tags, modifiers.type ) ? config.tags[modifiers.type] : config.tags['default'] );
 						tag = hasKey(tag, 'is') ? tag.is : (isString(tag) ? tag : 'div');
 
 						structure_files.forEach(function(structure_file){
 
-							var folder = 'component';
-							if( config.design === 'atomic' )
-								folder = config.atomic[depth];
+							let folder = 'component';
+							if( config.design != 'component' )
+								folder = config[config.design][depth];
 
-							var filepath = '/design_system/'+folder+'/' + (structure_files.length > 1 ? filename + '/' + filename : filename) + path.extname(structure_file);
-							var content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
+							let filepath = '/design_system/'+folder+'/' + (structure_files.length > 1 ? filename + '/' + filename : filename) + path.extname(structure_file);
+							let content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
 
 							if( path.extname(structure_file) === '.twig' && content.indexOf('<elements></elements>') !== -1 && data.content.length)
 								content = '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
 							else if( path.extname(structure_file) === '.vue')
 								content = content.replace("datajs:''", data.content);
 
-							var name = camelCase(modifiers.name);
+							let name = camelCase(modifiers.name);
 
 							if( config.type === "vuejs")
 								name = _camelCase(modifiers.name);
 
-							if( config.design === 'atomic' )
-								name = config.atomic[depth].substr(0, 1) + '-' + _snakeCase(modifiers.name);
+							if( config.design != 'component' )
+								name = config[config.design][depth].substr(0, 1) + '-' + _snakeCase(modifiers.name);
 
 							content = content
 								.replace(/{{ name }}/g, name)
@@ -481,7 +482,7 @@ var wml = (function (config) {
 								.replace('.#{$elements}{ }', data.scss)
 								.replace(/\n\t\n/, '\n\t');
 
-							var file = {};
+							let file = {};
 							file[filepath] = content;
 
 							files.push(file);
@@ -489,7 +490,7 @@ var wml = (function (config) {
 
 						if( config.acf && data.fields.length ) {
 
-							var group = self.generateACFGroup('component', name);
+							let group = self.generateACFGroup('component', name);
 							group.fields = data.fields;
 							files.push( createACFFile(group) );
 						}
@@ -519,8 +520,8 @@ var wml = (function (config) {
 
 	function createACFFile(item){
 
-		var file = {};
-		var filepath = '/acf-json/' + item.key + '.json';
+		let file = {};
+		let filepath = '/acf-json/' + item.key + '.json';
 		file[filepath] = JSON.stringify(item);
 
 		return file;
@@ -567,7 +568,7 @@ var wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 
-			var data = {
+			let data = {
 				scss: '',
 				elements: '',
 				content: '',
@@ -583,7 +584,7 @@ var wml = (function (config) {
 
 					self.generateComponent(element, depth).then(function(component){
 
-						var components = [];
+						let components = [];
 
 						if( component.modifiers.loop ){
 
@@ -593,9 +594,9 @@ var wml = (function (config) {
 								components.push("<div v-for=\"index in "+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+"\" :key=\"index\">");
 						}
 
-						var folder = 'component';
-						if( config.design === 'atomic' )
-							folder = config.atomic[depth];
+						let folder = 'component';
+						if( config.design != 'component' )
+							folder = config[config.design][depth];
 
 						if( config.type === 'vuejs-twig-scss')
 							components.push((component.modifiers.loop?'\t':'')+"{% include '"+folder+"/"+_snakeCase(component.name)+".twig' %}");
@@ -625,17 +626,17 @@ var wml = (function (config) {
 
 						if( isObject(element) ) {
 
-							var modifiers = self.getModifiers(Object.keys(element)[0]);
-							var name =  modifiers.name;
+							let modifiers = self.getModifiers(Object.keys(element)[0]);
+							let name =  modifiers.name;
 
 							if( data.components.length ) {
 								data.elements += data.components;
 								data.components = '';
 							}
 
-							var tag = modifiers.tag ? modifiers.tag : (hasKey(config.tags, modifiers.type) ? config.tags[modifiers.type] : config.tags['default']);
-							var html_tag = hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div');
-							var elements = "";
+							let tag = modifiers.tag ? modifiers.tag : (hasKey(config.tags, modifiers.type) ? config.tags[modifiers.type] : config.tags['default']);
+							let html_tag = hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div');
+							let elements = "";
 
 							if( hasKey(config, 'components') && hasKey(config.components, name) )
 								elements = '<'+name+'>'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+name+'>\n';
@@ -649,7 +650,7 @@ var wml = (function (config) {
 
 							data.elements = elements;
 
-							var field = self.generateACFComponent(modifiers.loop ? 'repeater' : 'group', name);
+							let field = self.generateACFComponent(modifiers.loop ? 'repeater' : 'group', name);
 							field.sub_fields = data.fields[0];
 
 							data.fields = field;
@@ -662,14 +663,14 @@ var wml = (function (config) {
 			}
 			else {
 				if( isString(element) && element !== 'layout' ) {
-					var modifiers = self.getModifiers(element);
-					var name =  modifiers.name;
+					let modifiers = self.getModifiers(element);
+					let name =  modifiers.name;
 
-					var tag = modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default'];
+					let tag = modifiers.type in config.tags ? config.tags[modifiers.type] : config.tags['default'];
 
-					var html_tag = modifiers.tag ? modifiers.tag : ( hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div') );
-					var content = hasKey(tag, 'data') ? tag.data : '';
-					var filename = _snakeCase(name);
+					let html_tag = modifiers.tag ? modifiers.tag : ( hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div') );
+					let content = hasKey(tag, 'data') ? tag.data : '';
+					let filename = _snakeCase(name);
 
 					if( content === false )
 						data.content = '';
@@ -707,7 +708,7 @@ var wml = (function (config) {
 		if( !config.acf || ( hasKey(config.acf, 'ignore') && hasKey(config.acf.ignore, type) ) )
 			return [];
 
-		var field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
+		let field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
 
 		if( type === 'repeater'){
 			field.button_label = "Add "+name;
@@ -727,7 +728,7 @@ var wml = (function (config) {
 		if( !config.acf || ( hasKey(config.acf, 'ignore') && hasKey(config.acf.ignore, type) ) )
 			return [];
 
-		var group = JSON.parse(fs.readFileSync( config.acf.path+'/' + (fs.existsSync(config.acf.path+'/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
+		let group = JSON.parse(fs.readFileSync( config.acf.path+'/' + (fs.existsSync(config.acf.path+'/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
 
 		group.key = getId('group_', name);
 		group.title = ucFirst(name).replace('_', ' ');
@@ -782,16 +783,16 @@ var wml = (function (config) {
 		else {
 			return new Promise(function (resolve, reject) {
 
-				var filePath = Object.keys(data)[0];
-				var content = data[filePath];
+				let filePath = Object.keys(data)[0];
+				let content = data[filePath];
 
 				filePath = config.output + filePath;
 
 				try {
-					var dirname = path.dirname(filePath);
+					let dirname = path.dirname(filePath);
 					mkdir.sync(dirname);
 
-					var file_content = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+					let file_content = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
 
 					if( content.length > file_content.length ) {
 						fs.writeFileSync(filePath, content);
@@ -819,7 +820,7 @@ var wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				var object = yaml.safeLoad(fs.readFileSync(file, 'utf8'));
+				let object = yaml.load(fs.readFileSync(file, 'utf8'));
 				resolve(object);
 			} catch (e) {
 				reject(e);
@@ -833,7 +834,7 @@ var wml = (function (config) {
 
 if (require.main === module) {
 
-	var args = require('minimist')(process.argv.slice(2));
+	let args = require('minimist')(process.argv.slice(2));
 
 	new wml(args).process().then(function(result) {
 		console.log('Export successfull '+result);

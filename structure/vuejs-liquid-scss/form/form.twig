@@ -1,0 +1,118 @@
+{% set data = data|default([
+  {options:{ action: '/contact/send' }},
+  {form: [
+    {
+      "type": "select",
+      "name": "category",
+      "label": "Choisir catégorie métier",
+      "required": false,
+      "class": "",
+      "options": [
+      {
+        "label": "Agent immobilier",
+        "value": "agent"
+      },
+      {
+        "label": "Autre",
+        "value": "autre"
+      }
+    ],
+      "text": "",
+      "value": ""
+    },
+    {
+      "type": "text",
+      "name": "name",
+      "label": "Nom prénom",
+      "required": true,
+      "class": "",
+      "options": [],
+      "text": "",
+      "value": ""
+    },
+    {
+      "type": "tel",
+      "name": "tel",
+      "label": "Numéro de téléphone",
+      "required": true,
+      "class": "",
+      "options": [],
+      "text": "",
+      "value": ""
+    },
+    {
+      "type": "email",
+      "name": "email",
+      "label": "Adresse email",
+      "required": true,
+      "class": "",
+      "options": [],
+      "text": "",
+      "value": ""
+    },
+    {
+      "type": "textarea",
+      "name": "message",
+      "label": "Message",
+      "required": false,
+      "class": "",
+      "options": [],
+      "text": "",
+      "value": "Bonjour,\r\nPouvez-vous me rappeler pour un devis en ligne ?\r\nMerci"
+    },
+    {
+      "type": "submit",
+      "name": "",
+      "label": "Envoyer",
+      "required": false,
+      "class": "",
+      "options": [],
+      "text": "",
+      "value": "Envoyer"
+    },
+    {
+      "type": "mention",
+      "name": "",
+      "label": "lorem ipsum  dfdf",
+      "required": false,
+      "class": "",
+      "options": [],
+      "text": "lorem ipsum<br />\r\n<br />\r\ndfdf",
+      "value": ""
+    }
+  ]
+  }
+]) %}
+
+<div block="{{ name }}">
+
+  <form-component inline-template :base='{{ data.form|to_vue|json_encode|clean|raw }}'>
+    <div element="form" v-if="!send">
+
+      {% if not options.parent_is_form|default() %}
+
+        <form action="{{ data.options.action|default('') }}" block="m-form" data-success="{{ data.options.success|default('Message envoyé') }}" data-error="{{ data.options.error|default('Une erreur est survenue') }}" ref="{{ data.options.ref|default('form') }}" @submit.prevent="{{ data.options.submit|default('handleSubmit') }}">
+
+          {% for input in data.form|default([]) %}
+
+            {% include 'atom/input.twig' %}
+          {% endfor %}
+        </form>
+
+      {% else %}
+
+        <div block="m-form">
+          {% for input in data.form.data|default([]) %}
+            {% include 'atom/input.twig' %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+</div>
+    <div v-else>
+      Votre message a bien été envoyé
+    </div>
+  </form-component>
+</div>
+
+

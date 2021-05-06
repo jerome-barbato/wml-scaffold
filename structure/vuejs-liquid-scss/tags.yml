@@ -1,0 +1,98 @@
+default: div
+
+title:
+  is: h2
+  data: Lorem ipsum
+
+subtitle:
+  is: h3
+  data: Dolor sit amet
+
+icon:
+  is: span
+  data: facebook
+  html: '<tag element="{{ name }}" data-icon="{{ data }}"></tag>'
+
+cta:
+  is: a
+  data: "{title:'Action', url:'#'}"
+  html: '<tag element="cta" href="{{ data.url }}" target="{{ item.target|default() }}" rel="{% if item.target|default() == ''_blank'' %}noreferrer noopener{% endif %}">{{ data.title }}</tag>'
+
+media:
+  is: media
+  data: "{image:asset('/tmp/placeholder.jpg'), video:asset('/tmp/placeholder.mp4')}"
+  html: '<media image="{{ data.image }}" video={{ data.video }}></media>'
+
+date: time
+
+image:
+  is: div
+  innerHtml: '{% if data.image|default() %} {{ data.image.toHTML(800,600)|raw }} {% endif %}'
+  data: "asset('/tmp/placeholder.jpg')"
+
+article: article
+
+close:
+  is: button
+  data: false
+  innerHtml: "{{ __('Close') }}"
+
+scroll_down:
+  is: button
+  data: false
+  innerHtml: ""
+
+download: button
+
+next:
+  is: button
+  data: false
+
+previous:
+  is: button
+  data: false
+
+button: button
+header: header
+heading: header
+footer: footer
+grid: section
+project: article
+
+link:
+  data: '#'
+  html: '<a element="{{ name }}" href="{{ data }}"></a>'
+
+number:
+  data: 85
+
+category:
+  data: 'My category'
+
+name:
+  data: 'Simon'
+
+job:
+  data: 'Architect'
+
+address:
+  data: '22 boulevard Stalingrad<br/>Nice'
+
+phone:
+  data: '+33 00 11 22 33 44'
+
+mail:
+  data: 'no-reply@dev.fr'
+
+video:
+  is: div
+  data: "asset('/tmp/placeholder.mp4')"
+  innerHtml: '<video><source src="{{ data }}"/></video>'
+
+wysiwyg:
+  is: div
+  data: '<h2>Lorem Ipsum</h2><h3>dolor sit amet</h3><h4>consectetur adipiscing</h4><p>Fusce fermentum <b>metus neque</b>, eu <i>euismod risus</i> lacinia sed. Pellentesque ac ipsum at enim euismod tempor. In sem odio</p><p>vehicula at facilisis id, viverra nec risus. Sed facilisis diam nec lorem pulvinar, a porttitor justo molestie. Etiam non cursus ligula.</p>'
+
+text:
+  is: p
+  data: 'Fusce fermentum metus neque, eu euismod risus lacinia sed. Pellentesque ac ipsum at enim euismod tempor. In sem odio<br/>vehicula at facilisis id, viverra nec risus. Sed facilisis diam nec lorem pulvinar, a porttitor justo molestie. Etiam non cursus ligula.'

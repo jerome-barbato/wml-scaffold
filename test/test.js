@@ -16,8 +16,23 @@ function test(params, output, done) {
 
 describe('Test for pages', function() {
 
-    it('Test complex generation', function(done) {
-       // test('./test/complex.wml', {outputPath:'./export', design:'component'}, true, done);
-        test({inputPath:'./test/complex.wml', outputPath:'./export', design:'atomic'}, true, done);
+    it('Test vuejs-twig-scss atomic generation', function(done) {
+        test({input:'./test/complex.wml', output:'./export', design:'atomic', type: 'vuejs-twig-scss'}, true, done);
     });
+
+	it('Test vuejs-twig-scss component generation', function(done) {
+		test({input:'./test/complex.wml', output:'./export', design:'component', type: 'vuejs-twig-scss'}, true, done);
+	});
+
+	it('Test vuejs component generation', function(done) {
+		test({input:'./test/complex.wml', output:'./export', type: 'vuejs'}, true, done);
+	});
+
+	it('Test vuejs-liquid-scss component generation', function(done) {
+		test({input:'./test/complex.wml', design:'component', output:'./export', type: 'vuejs-liquid-scss'}, true, done);
+	});
+
+	it('Test vuejs-liquid-scss shopify generation', function(done) {
+		test({input:'./test/complex.wml', design:'shopify', output:'./export', type: 'vuejs-liquid-scss'}, true, done);
+	});
 });
