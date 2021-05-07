@@ -474,7 +474,7 @@ const wml = (function (config) {
 							let filepath = '/design_system/'+folder+'/' + (structure_files.length > 1 ? filename + '/' + filename : filename) + path.extname(structure_file);
 							let content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
 
-							if( path.extname(structure_file) === '.twig' && content.indexOf('<wml-elements></wml-elements>') !== -1 && data.content.length)
+							if( config.language.data && content.indexOf('<wml-elements></wml-elements>') !== -1 && data.content.length)
 								content = '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
 							else if( path.extname(structure_file) === '.vue')
 								content = content.replace("datajs:''", data.content);
@@ -693,14 +693,14 @@ const wml = (function (config) {
 					if( content === false )
 						data.content = '';
 					else
-						data.content = filename+' : '+( !isString(content) || content.indexOf('(') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
+						data.content = filename+' : '+( !isString(content) || content.indexOf('(') !== -1 || content.indexOf('|') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
 
 					data.scss = (config.language.bem?'&__':'.')+filename+'{  }';
 
 
 					if( hasKey(tag, 'html') ){
 
-						data.elements = tag.html.replace('<tag', '<'+html_tag).replace('</tag>', '</'+html_tag+'>').replace('{{ name }}', filename);
+						data.elements = tag.html.replace('<wml-tag', '<'+html_tag).replace('</wml-tag>', '</'+html_tag+'>').replace('{{ name }}', filename);
 						data.elements = data.elements.replace(/{{ data/g, '{{ '+(config.language.data?'data.':'')+filename);
 						data.elements = data.elements.replace(/="data"/g, '="'+(config.language.data?'data.':'')+filename+'"');
 					}
