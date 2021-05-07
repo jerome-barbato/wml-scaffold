@@ -1,2 +1,4 @@
 data: true
 bem: true
+
+include: "{% include 'wml_component.twig' %}"

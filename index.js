@@ -217,31 +217,49 @@ const wml = (function (config) {
 
 								let folder = 'component';
 
-								if( config.design != 'component' )
+								if( config.design !== 'component' )
 									folder = config[config.design][1];
 
-								if( config.type === 'vuejs-twig-scss')
-									components.push("{% include '"+folder+"/"+component_name+".twig' %}");
-								else if( config.type === 'vuejs')
-									components.push('<'+_camelCase(component_name)+'></'+_camelCase(component_name)+'>');
+								let tag_name = _camelCase(component_name);
+								let component = config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+component_name);
+
+								components.push( component );
 							}
 						});
 					}
 
-					content = content.replace('<components></components>', components.join('\n\t'));
-					content = content.replace('import components;', components_import.join('\n\t'));
+					content = content.replace('<wml-components></wml-components>', components.join('\n\t'));
+					content = content.replace('import wml_components;', components_import.join('\n\t'));
 					content = content.replace('components:{ },', 'components:{'+components_list.join(',')+'},');
 
-					let folder = 'page';
+					let folder = 'page/';
 
-					if( config.design != 'component' )
-						folder = config[config.design][0];
+					if( config.design !== 'component' )
+						folder = config[config.design][0]+'/';
 
-					if( type === 'layout')
-						folder += '/layout';
+					let subfolder = structure_files.length > 1 ? name + '/' : '';
 
-					let filepath = '/design_system/' + folder + '/' + (structure_files.length > 1 ? name + '/' + name : name ) + path.extname(structure_file);
+					if( type === 'layout'){
 
+						if( config.type === 'vuejs' ){
+
+							folder = '';
+							name = 'app';
+							subfolder = '';
+						}
+						else if( config.type.includes('liquid') ){
+
+							folder = 'layout/';
+							subfolder = '';
+						}
+						else{
+
+							folder += 'layout/';
+						}
+					}
+
+					let filepath = '/design_system/' + folder + subfolder + name + path.extname(structure_file);
+					console.log(filepath)
 					let file = {};
 					file[filepath] = content;
 
@@ -450,13 +468,13 @@ const wml = (function (config) {
 						structure_files.forEach(function(structure_file){
 
 							let folder = 'component';
-							if( config.design != 'component' )
+							if( config.design !== 'component' )
 								folder = config[config.design][depth];
 
 							let filepath = '/design_system/'+folder+'/' + (structure_files.length > 1 ? filename + '/' + filename : filename) + path.extname(structure_file);
 							let content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
 
-							if( path.extname(structure_file) === '.twig' && content.indexOf('<elements></elements>') !== -1 && data.content.length)
+							if( path.extname(structure_file) === '.twig' && content.indexOf('<wml-elements></wml-elements>') !== -1 && data.content.length)
 								content = '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
 							else if( path.extname(structure_file) === '.vue')
 								content = content.replace("datajs:''", data.content);
@@ -466,17 +484,17 @@ const wml = (function (config) {
 							if( config.type === "vuejs")
 								name = _camelCase(modifiers.name);
 
-							if( config.design != 'component' )
+							if( config.design !== 'component' )
 								name = config[config.design][depth].substr(0, 1) + '-' + _snakeCase(modifiers.name);
 
 							content = content
 								.replace(/{{ name }}/g, name)
 								.replace(/#{\$name}/g, name)
-								.replace('<tag', '<'+tag)
-								.replace('</tag>', '</'+tag+'>')
-								.replace('<elements></elements>', data.elements)
-								.replace('<components></components>', data.components)
-								.replace('import components;', data.components_import)
+								.replace('<wml-tag', '<'+tag)
+								.replace('</wml-tag>', '</'+tag+'>')
+								.replace('<wml-elements></wml-elements>', data.elements)
+								.replace('<wml-components></wml-components>', data.components)
+								.replace('import wml_components;', data.components_import)
 								.replace('components:{ },', 'components:{'+data.components_list+'},')
 								.replace('&__#{$elements}{ }', data.scss)
 								.replace('.#{$elements}{ }', data.scss)
@@ -595,13 +613,13 @@ const wml = (function (config) {
 						}
 
 						let folder = 'component';
-						if( config.design != 'component' )
+						if( config.design !== 'component' )
 							folder = config[config.design][depth];
 
-						if( config.type === 'vuejs-twig-scss')
-							components.push((component.modifiers.loop?'\t':'')+"{% include '"+folder+"/"+_snakeCase(component.name)+".twig' %}");
-						else if( config.type === 'vuejs')
-							components.push((component.modifiers.loop?'\t':'')+'<'+_camelCase(component.name)+'></'+_camelCase(component.name)+'>');
+						let tag_name = _camelCase(component.name);
+						let _component = (component.modifiers.loop?'\t':'')+config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+_snakeCase(component.name));
+
+						components.push( _component );
 
 						data.components_list.push(_camelCase(component.name));
 						data.components_import.push('import '+_camelCase(component.name)+' from "@/component/'+_snakeCase(component.name)+'";');
@@ -837,7 +855,7 @@ if (require.main === module) {
 	let args = require('minimist')(process.argv.slice(2));
 
 	new wml(args).process().then(function(result) {
-		console.log('Export successfull '+result);
+		console.log('Export successful '+result);
 	}).catch(function(error) {
 		console.log(error);
 	});

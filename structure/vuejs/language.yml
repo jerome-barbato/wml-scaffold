@@ -1,2 +1,4 @@
 data: false
 bem: false
+
+include: "<wml_component></wml_component>"

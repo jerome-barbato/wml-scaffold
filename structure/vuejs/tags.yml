@@ -11,11 +11,11 @@ subtitle:
 icon:
   is: span
   data: facebook
-  html: '<tag class="{{ name }}" :data-icon="data"></tag>'
+  html: '<wml-tag class="{{ name }}" :data-icon="data"></wml-tag>'
 
 cta:
   is: button
-  html: '<tag class="cta" :href="data">{{ title }}</tag>'
+  html: '<wml-tag class="cta" :href="data">{{ title }}</wml-tag>'
 
 date: time
 

@@ -2,7 +2,7 @@
 
 	<div id="app" v-bind:class="{'has-popin':show_languages, 'online':online, 'offline':!online}">
 
-		<components></components>
+		<wml-components></wml-components>
 
 		<transition :name="transitionDirection">
 			<router-view name="view" :key="$route.fullPath"></router-view>
@@ -13,7 +13,7 @@
 
 <script>
 
-	import components;
+	import wml_components;
 
 	export default {
 		name: 'app',

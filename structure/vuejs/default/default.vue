@@ -1,13 +1,13 @@
 <template>
-	<tag class="{{ name }}">
-		<elements></elements>
-		<components></components>
-	</tag>
+	<wml-tag class="{{ name }}">
+		<wml-elements></wml-elements>
+		<wml-components></wml-components>
+	</wml-tag>
 </template>
 
 <script>
 
-	import components;
+	import wml_components;
 
 	export default {
 		name: '{{ name }}',

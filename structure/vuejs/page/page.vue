@@ -4,7 +4,7 @@
 
 		<div class="container">
 
-			<components></components>
+			<wml-components></wml-components>
 		</div>
 	</main>
 
@@ -16,14 +16,14 @@
 
 <script>
 
-	import components;
+	import wml_components;
 
 	export default {
 		data() {
 			return {}
 		},
 		methods: {},
-		components: {},
+		components: { },
 		computed:{
 			page(){
 				return this.$store.getters.page(this.$route.path);

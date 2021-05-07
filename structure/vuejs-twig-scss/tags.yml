@@ -11,12 +11,12 @@ subtitle:
 icon:
   is: span
   data: facebook
-  html: '<tag element="{{ name }}" data-icon="{{ data }}"></tag>'
+  html: '<wml-tag element="{{ name }}" data-icon="{{ data }}"></wml-tag>'
 
 cta:
   is: a
   data: "{title:'Action', url:'#'}"
-  html: '<tag element="cta" href="{{ data.url }}" target="{{ item.target|default() }}" rel="{% if item.target|default() == ''_blank'' %}noreferrer noopener{% endif %}">{{ data.title }}</tag>'
+  html: '<wml-tag element="cta" href="{{ data.url }}" target="{{ item.target|default() }}" rel="{% if item.target|default() == ''_blank'' %}noreferrer noopener{% endif %}">{{ data.title }}</wml-tag>'
 
 media:
   is: media
