@@ -259,7 +259,6 @@ const wml = (function (config) {
 					}
 
 					let filepath = '/design_system/' + folder + subfolder + name + path.extname(structure_file);
-					console.log(filepath)
 					let file = {};
 					file[filepath] = content;
 
@@ -269,7 +268,7 @@ const wml = (function (config) {
 				addFiles(files);
 
 				if( isArray(structure) ) {
-					self.generateComponents(structure, 1).then(function(){
+					self.generateComponents(structure, 1, type).then(function(){
 						resolve(files);
 					}).catch(reject);
 				}
@@ -333,10 +332,10 @@ const wml = (function (config) {
 	}
 
 
-	wml.prototype.generateComponents = function(components, depth){
+	wml.prototype.generateComponents = function(components, depth, type){
 
 		return Promise.all(components.map(function(component){
-			return self.generateComponent(component, depth);
+			return self.generateComponent(component, depth, type);
 		}));
 	};
 
@@ -354,7 +353,8 @@ const wml = (function (config) {
 			type: _snakeCase(name),
 			extend: false,
 			loop: false,
-			tag: false
+			tag: false,
+			acf: true
 		};
 
 		if( hasKey(config, 'alias') &&  hasKey(config.alias, modifiers.type) )
@@ -365,7 +365,7 @@ const wml = (function (config) {
 			filter = filter.replace(')','').split('(');
 
 			if( hasKey(modifiers, filter[0]) && filter[0] !== 'name' )
-				modifiers[filter[0]] = filter.length > 1 ? filter[1] : true;
+				modifiers[filter[0]] = filter.length > 1 ? parse(filter[1]) : true;
 		});
 
 		if( modifiers.loop === true )
@@ -373,6 +373,24 @@ const wml = (function (config) {
 
 		return modifiers;
 	};
+
+
+	function parse(str) {
+
+		if (isString(str) && str==='false') {
+			return false;
+		}
+		else if (isString(str) && str==='true') {
+			return true;
+		}
+
+		let number = Number(str);
+
+		if( !isNaN(str) )
+			return number;
+
+		return str;
+	}
 
 
 	function ucFirst(str) {
@@ -436,7 +454,7 @@ const wml = (function (config) {
 	}
 
 
-	wml.prototype.generateComponent = function(component, depth){
+	wml.prototype.generateComponent = function(component, depth, type){
 
 		return new Promise(function (resolve, reject) {
 
@@ -458,7 +476,7 @@ const wml = (function (config) {
 
 					let elements = isObject(component) ? component[key] : false;
 
-					self.generateData(elements, depth+1).then(function(data) {
+					self.generateData(elements, depth+1, type).then(function(data) {
 
 						let files = [];
 
@@ -506,7 +524,7 @@ const wml = (function (config) {
 							files.push(file);
 						});
 
-						if( config.acf && data.fields.length ) {
+						if( config.acf && data.fields.length && modifiers.acf && type !== 'layout' ) {
 
 							let group = self.generateACFGroup('component', name);
 							group.fields = data.fields;
@@ -582,7 +600,7 @@ const wml = (function (config) {
 	}
 
 
-	wml.prototype.getData = function(element, depth){
+	wml.prototype.getData = function(element, depth, type){
 
 		return new Promise(function (resolve, reject) {
 
@@ -633,7 +651,9 @@ const wml = (function (config) {
 						}
 
 						data.components = components.join('\n\t');
-						data.fields = self.generateACFComponent('component', component.modifiers.name);
+
+						if( component.acf && type !== 'layout' )
+							data.fields = self.generateACFComponent('component', component.modifiers.name);
 
 						resolve(data);
 					});
@@ -668,10 +688,13 @@ const wml = (function (config) {
 
 							data.elements = elements;
 
-							let field = self.generateACFComponent(modifiers.loop ? 'repeater' : 'group', name);
-							field.sub_fields = data.fields[0];
+							if( modifiers.acf && type !== 'layout' ){
 
-							data.fields = field;
+								let field = self.generateACFComponent(modifiers.loop ? 'repeater' : 'group', name);
+								field.sub_fields = data.fields[0];
+
+								data.fields = field;
+							}
 						}
 
 						resolve(data)
@@ -712,7 +735,8 @@ const wml = (function (config) {
 					if( content === false )
 						data.elements = data.elements.replace('{{ '+(config.language.data?'data.':'')+filename+' }}', '');
 
-					data.fields = self.generateACFComponent(modifiers.type, name);
+					if( modifiers.acf && type !== 'layout' )
+						data.fields = self.generateACFComponent(modifiers.type, name);
 				}
 
 				resolve(data);
@@ -759,19 +783,19 @@ const wml = (function (config) {
 	};
 
 
-	wml.prototype.generateData = function(elements, depth){
+	wml.prototype.generateData = function(elements, depth, type){
 
 		if( isDefined(elements) && isIterable(elements) ) {
 			if( isArray(elements) ) {
 				return Promise.all(elements.map(function(element){
-					return self.getData(element, depth);
+					return self.getData(element, depth, type);
 				})).then(function(data){
 					return processData(data, true)
 				});
 			}
 			else{
 				return Promise.all(Object.keys(elements).map(function(key){
-					return self.getData(elements[key], depth);
+					return self.getData(elements[key], depth, type);
 				})).then(function(data){
 					return processData(data, false)
 				});

@@ -13,7 +13,7 @@ layout:
 
 home:
   - layout: default
-  - $heading:
+  - $heading|acf(false):
       - image
       - title
   - $full-text:
