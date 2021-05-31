@@ -652,8 +652,8 @@ const wml = (function (config) {
 
 						data.components = components.join('\n\t');
 
-						if( component.acf && type !== 'layout' )
-							data.fields = self.generateACFComponent('component', component.modifiers.name);
+						if( component.modifiers.acf && type !== 'layout' )
+							data.fields = self.generateACFComponent('component', component.modifiers.name, component.modifiers.acf);
 
 						resolve(data);
 					});
@@ -690,7 +690,7 @@ const wml = (function (config) {
 
 							if( modifiers.acf && type !== 'layout' ){
 
-								let field = self.generateACFComponent(modifiers.loop ? 'repeater' : 'group', name);
+								let field = self.generateACFComponent(modifiers.loop ? 'repeater' : 'group', name, modifiers.acf);
 								field.sub_fields = data.fields[0];
 
 								data.fields = field;
@@ -736,7 +736,7 @@ const wml = (function (config) {
 						data.elements = data.elements.replace('{{ '+(config.language.data?'data.':'')+filename+' }}', '');
 
 					if( modifiers.acf && type !== 'layout' )
-						data.fields = self.generateACFComponent(modifiers.type, name);
+						data.fields = self.generateACFComponent(modifiers.type, name, modifiers.acf);
 				}
 
 				resolve(data);
@@ -745,10 +745,13 @@ const wml = (function (config) {
 	};
 
 
-	wml.prototype.generateACFComponent = function(type, name){
+	wml.prototype.generateACFComponent = function(type, name, params){
 
 		if( !config.acf || ( hasKey(config.acf, 'ignore') && hasKey(config.acf.ignore, type) ) )
 			return [];
+
+		if( isString(params) )
+			params = params.split(',');
 
 		let field = JSON.parse(fs.readFileSync( config.acf.path+'/field/' + (fs.existsSync(config.acf.path+'/field/'+type+'.json') ? type : 'default' ) + '.json', 'utf8'));
 
@@ -756,6 +759,9 @@ const wml = (function (config) {
 			field.button_label = "Add "+name;
 			name = plural(name);
 		}
+
+		if( params.indexOf('required') )
+			field.required = true;
 
 		field.key = getUniqid('field_');
 		field.label = ucFirst(name).replace('_', ' ');

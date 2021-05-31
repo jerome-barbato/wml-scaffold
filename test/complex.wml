@@ -15,7 +15,7 @@ home:
   - layout: default
   - $heading|acf(false):
       - image
-      - title
+      - title|acf(required)
   - $full-text:
       - title
       - wysiwyg
