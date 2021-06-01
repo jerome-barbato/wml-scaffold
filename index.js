@@ -777,7 +777,7 @@ const wml = (function (config) {
 			name = plural(name);
 		}
 
-		if( typeof params === 'object' && params.indexOf('required') )
+		if( typeof params === 'object' && params.indexOf('required') !== -1 )
 			field.required = true;
 
 		field.key = getUniqid('field_');
