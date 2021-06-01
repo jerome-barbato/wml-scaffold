@@ -44,6 +44,7 @@ const wml = (function (config) {
 	if( config.type === "vuejs")
 		config.design = "component";
 
+
 	function deleteFolderRecursive(path) {
 		if( fs.existsSync(path) ) {
 			fs.readdirSync(path).forEach(function(file,index){
@@ -173,6 +174,7 @@ const wml = (function (config) {
 	wml.prototype.generatePage = function(name, structure, type){
 
 		return new Promise(function (resolve, reject) {
+
 			try {
 
 				name = _snakeCase(name);
@@ -193,7 +195,7 @@ const wml = (function (config) {
 					if( type === 'page' ) {
 						if( isArray(structure) && isObject(structure[0]) && 'layout' in structure[0]) {
 							let layout_name = _snakeCase(structure[0].layout);
-							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'page/layout/'+layout_name+'.twig\' %}\n');
+							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'page/layout/'+layout_name+'.'+config.language.extension+'\' %}\n');
 						}
 						else {
 							content = content.replace(/{% extends layout %}\r\n/, '');
@@ -260,6 +262,7 @@ const wml = (function (config) {
 
 					let filepath = '/design_system/' + folder + subfolder + name + path.extname(structure_file);
 					let file = {};
+
 					file[filepath] = content;
 
 					files.push(file);
@@ -519,6 +522,20 @@ const wml = (function (config) {
 								.replace(/\n\t\n/, '\n\t');
 
 							let file = {};
+
+							if( !config.language.bem ){
+
+								const regex = /block="([^"]*)"/gm;
+								const m = regex.exec(content);
+
+								if(m){
+
+									let block = m[1];
+									content = content.replace('block=', 'class=')
+									content = content.replace(/element="/g, 'class="'+block+'__')
+								}
+							}
+
 							file[filepath] = content;
 
 							files.push(file);
@@ -624,10 +641,10 @@ const wml = (function (config) {
 
 						if( component.modifiers.loop ){
 
-							if( config.type === 'vuejs-twig-scss')
-								components.push("{% for i in 1.."+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+" %}");
-							else if( config.type === 'vuejs')
+							if( config.type === 'vuejs')
 								components.push("<div v-for=\"index in "+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+"\" :key=\"index\">");
+							else
+								components.push("{% for i in (1.."+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+") %}");
 						}
 
 						let folder = 'component';
@@ -644,10 +661,10 @@ const wml = (function (config) {
 
 						if( component.modifiers.loop ){
 
-							if( config.type === 'vuejs-twig-scss')
-								components.push("{% endfor %}");
-							else if( config.type === 'vuejs')
+							if( config.type === 'vuejs')
 								components.push("</div>");
+							else
+								components.push("{% endfor %}");
 						}
 
 						data.components = components.join('\n\t');
@@ -679,7 +696,7 @@ const wml = (function (config) {
 							if( hasKey(config, 'components') && hasKey(config.components, name) )
 								elements = '<'+name+'>'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+name+'>\n';
 							else
-								elements = '<'+html_tag+' '+(config.language.bem?'element':'class')+'="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
+								elements = '<'+html_tag+' element="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
 
 							if( modifiers.loop )
 								elements = '\n\t{% for i in 1..'+modifiers.loop+' %}\n\t\t'+elements+'\t{% endfor %}\n';
@@ -718,7 +735,7 @@ const wml = (function (config) {
 					else
 						data.content = filename+' : '+( !isString(content) || content.indexOf('(') !== -1 || content.indexOf('|') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
 
-					data.scss = (config.language.bem?'&__':'.')+filename+'{  }';
+					data.scss = '&__'+filename+'{  }';
 
 
 					if( hasKey(tag, 'html') ){
@@ -728,9 +745,9 @@ const wml = (function (config) {
 						data.elements = data.elements.replace(/="data"/g, '="'+(config.language.data?'data.':'')+filename+'"');
 					}
 					else if( hasKey(tag, 'innerHtml') )
-						data.elements = '<'+html_tag+' '+(config.language.bem?'element':'class')+'="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename).replace(/="data"/g, '="'+filename+'"')+'</'+html_tag+'>';
+						data.elements = '<'+html_tag+' element="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename).replace(/="data"/g, '="'+filename+'"')+'</'+html_tag+'>';
 					else
-						data.elements = '<'+html_tag+' '+(config.language.bem?'element':'class')+'="'+filename+'">{{ '+(config.language.data?'data.':'')+filename+' }}</'+html_tag+'>';
+						data.elements = '<'+html_tag+' element="'+filename+'">{{ '+(config.language.data?'data.':'')+filename+' }}</'+html_tag+'>';
 
 					if( content === false )
 						data.elements = data.elements.replace('{{ '+(config.language.data?'data.':'')+filename+' }}', '');
@@ -760,7 +777,7 @@ const wml = (function (config) {
 			name = plural(name);
 		}
 
-		if( params.indexOf('required') )
+		if( typeof params === 'object' && params.indexOf('required') )
 			field.required = true;
 
 		field.key = getUniqid('field_');

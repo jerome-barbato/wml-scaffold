@@ -43,7 +43,7 @@ Vue.directive('number', {
       }
       var invalidKey = e.key.length === 1 && !contains(allowedChars, e.key)
         || e.key === '.' && contains(e.target.value, '.');
-      invalidKey && e.preventDefault();
+      invalidKey && e.preventdefault;
     }
 
     el.addEventListener('keypress', limit);

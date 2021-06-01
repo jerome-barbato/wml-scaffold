@@ -11,5 +11,5 @@
 }) %}
 
 <div block="{{ name }}">
-	<gmap lat="{{ data.position.lat|default() }}" lng="{{ data.position.lng|default() }}" title="{{data.title|default() }}" address="{{ data.position.address|default() }}" zoom="{{ data.zoom|default('6') }}" icon="{{ data.icon|default() }}"></gmap>
+	<gmap lat="{{ data.position.lat|default }}" lng="{{ data.position.lng|default }}" title="{{data.title|default }}" address="{{ data.position.address|default }}" zoom="{{ data.zoom|default('6') }}" icon="{{ data.icon|default }}"></gmap>
 </div>

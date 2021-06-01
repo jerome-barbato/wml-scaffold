@@ -16,7 +16,7 @@ icon:
 cta:
   is: a
   data: "{title:'Action', url:'#'}"
-  html: '<wml-tag element="cta" href="{{ data.url }}" target="{{ item.target|default() }}" rel="{% if item.target|default() == ''_blank'' %}noreferrer noopener{% endif %}">{{ data.title }}</wml-tag>'
+  html: '<wml-tag element="cta" href="{{ data.url }}" target="{{ item.target|default }}" rel="{% if item.target|default == ''_blank'' %}noreferrer noopener{% endif %}">{{ data.title }}</wml-tag>'
 
 media:
   is: media
@@ -27,7 +27,7 @@ date: time
 
 image:
   is: div
-  innerHtml: '{% if data.image|default() %} {{ data.image.toHTML(800,600)|raw }} {% endif %}'
+  innerHtml: '{% if data.image|default %} {{ data.image.toHTML(800,600)|raw }} {% endif %}'
   data: "asset('/tmp/placeholder.jpg')"
 
 article: article

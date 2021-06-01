@@ -89,9 +89,9 @@
   <form-component inline-template :base='{{ data.form|to_vue|json_encode|clean|raw }}'>
     <div element="form" v-if="!send">
 
-      {% if not options.parent_is_form|default() %}
+      {% if not options.parent_is_form|default %}
 
-        <form action="{{ data.options.action|default('') }}" block="m-form" data-success="{{ data.options.success|default('Message envoyé') }}" data-error="{{ data.options.error|default('Une erreur est survenue') }}" ref="{{ data.options.ref|default('form') }}" @submit.prevent="{{ data.options.submit|default('handleSubmit') }}">
+        <form action="{{ data.options.action|default }}" block="m-form" data-success="{{ data.options.success|default('Message envoyé') }}" data-error="{{ data.options.error|default('Une erreur est survenue') }}" ref="{{ data.options.ref|default('form') }}" @submit.prevent="{{ data.options.submit|default('handleSubmit') }}">
 
           {% for input in data.form|default([]) %}
 

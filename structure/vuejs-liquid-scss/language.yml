@@ -1,4 +1,5 @@
 data: true
-bem: true
+bem: false
+extension: liquid
 
 include: "{% include 'wml_component.liquid' %}"

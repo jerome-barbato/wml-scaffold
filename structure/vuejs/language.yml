@@ -1,4 +1,5 @@
 data: false
 bem: false
+extension: vue
 
 include: "<wml_component></wml_component>"
