@@ -1,43 +1,68 @@
-<!DOCTYPE html>
-<html lang="{{ request.locale.iso_code }}" class="utf8" prefix="og: http://ogp.me/ns#">
-
+<!doctype html>
+<html class="no-js supports-no-cookies" lang="{{ shop.locale }}">
 <head>
-	<meta name="viewport" content="width=device-width, maximum-scale=1, minimum-scale=1, initial-scale=1">
-	<meta name="msapplication-tap-highlight" content="no">
-	<meta name="robots" content="max-snippet:-1, max-image-preview:large; max-video-preview:-1">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<meta name="theme-color" content="{{ settings.color_accent }}">
+	<link rel="canonical" href="{{ canonical_url }}">
 
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-	<meta charset="utf-8"/>
-
-	<title>
-		{{ page_title }}
-	</title>
-
-	{% if settings.favicon != blank %}
+	{%- if settings.favicon != blank -%}
 		<link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png">
-	{% endif %}
+	{%- endif -%}
 
-	{% if page_description %}
+	{%- capture seo_title -%}
+		{{ page_title }}
+		{%- if current_tags -%}
+			{%- assign meta_tags = current_tags | join: ', ' -%} &ndash; {{ 'general.meta.tags' | t: tags: meta_tags -}}
+		{%- endif -%}
+		{%- if current_page and current_page != 1 -%}
+			&ndash; {{ 'general.meta.page' | t: page: current_page }}
+		{%- endif -%}
+		{%- assign escaped_page_title = page_title | escape -%}
+		{%- unless escaped_page_title contains shop.name -%}
+			&ndash; {{ shop.name }}
+		{%- endunless -%}
+	{%- endcapture -%}
+	<title>{{ seo_title | strip }}</title>
+
+	{%- if page_description -%}
 		<meta name="description" content="{{ page_description | escape }}">
-	{% endif %}
+	{%- endif -%}
 
-	<link rel="canonical" href="{{ canonical_url }}" />
+	{% include 'social-meta-tags' %}
+	{% include 'css-variables' %}
 
-	{{ 'style.scss.css' | asset_url | stylesheet_tag }}
+	{{ 'theme.css' | asset_url | stylesheet_tag }}
 
-	{{ content_for_header  }}
+	<script>
+		document.documentElement.className = document.documentElement.className.replace('no-js', '');
+
+		window.theme = {
+			strings: {
+				addToCart: {{ 'products.product.add_to_cart' | t | json }},
+				soldOut: {{ 'products.product.sold_out' | t | json }},
+				unavailable: {{ 'products.product.unavailable' | t | json }}
+			},
+			moneyFormat: {{ shop.money_format | json }}
+		};
+	</script>
+
+	{{ 'theme.js' | asset_url | script_tag }}
+
+	{{ content_for_header }}
 </head>
 
-<body id="{{ page_title | handle }}" class="{{ body_class }}">
+<body id="{{ page_title | handle }}" class="template-{{ template.name | handle }}">
 
-<main id="app">
+{% section 'header' %}
 
+<main role="main" id="MainContent">
 	<wml-components></wml-components>
-	{% block body %}{% endblock body %}
-
+	{% block content %}My default content{% endblock %}
 </main>
 
-{{ 'shop.js' | asset_url | script_tag }}
+{% section 'footer' %}
 
 </body>
 </html>

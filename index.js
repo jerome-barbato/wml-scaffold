@@ -5,6 +5,7 @@ const path       = require('path');
 const mkdir      = require('mkdirp');
 const _camelCase = require('lodash.camelcase');
 const _snakeCase = require('lodash.snakecase');
+const _kebabCase = require('lodash.kebabcase');
 
 const wml = (function (config) {
 
@@ -12,6 +13,10 @@ const wml = (function (config) {
 
 	wml.files = [];
 	wml.uid = {};
+	wml.imports = {
+		js :[],
+		scss :[]
+	};
 
 	config = Object.assign({
 		output: './export',
@@ -22,8 +27,9 @@ const wml = (function (config) {
 		},
 		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs|vuejs-liquid-scss
 		design: 'atomic', //component|atomic|shopify
-		atomic:['page','organism','molecule','atom'],
-		shopify:['templates','sections','snippets'],
+		group: true,
+		atomic:[{folder:'page', prefix:'p'},{folder:'organism', prefix:'o'},{folder:'molecule', prefix:'m'},{folder:'atom', prefix:'a'}],
+		shopify:[{folder:'templates', prefix:'t'},{folder:'sections', prefix:'s'},{folder:'snippets', prefix:'sn'}],
 		alias: {
 			'description': 'text',
 			'breadcrumb': 'nav',
@@ -43,6 +49,9 @@ const wml = (function (config) {
 
 	if( config.type === "vuejs")
 		config.design = "component";
+
+	if( config.design === "shopify")
+		config.group = false;
 
 
 	function deleteFolderRecursive(path) {
@@ -82,6 +91,8 @@ const wml = (function (config) {
 				return self.loadFile(config.input);
 			})
 			.then(self.generateFiles)
+			.then(self.generateStyle)
+			.then(self.generateScript)
 			.then(function(){
 				return self.writeFiles(wml.files);
 			})
@@ -162,6 +173,50 @@ const wml = (function (config) {
 	};
 
 
+	wml.prototype.generateStyle = function(){
+
+		function onlyUnique(value, index, self) {
+			return self.indexOf(value) === index;
+		}
+
+		let path = 'structure/'+config.type+'/style.scss';
+
+		if( fs.existsSync(path) ){
+
+			let content = fs.readFileSync(path, 'utf8');
+			content = content.replace("@import *;", wml.imports.scss.filter(onlyUnique).sort().join("\n"))
+
+			let key = config.group ? '/design_system/theme.scss' : '/design_system/styles/theme.scss';
+			let file = {};
+			file[key] = content
+
+			addFiles([file])
+		}
+	};
+
+
+	wml.prototype.generateScript = function(){
+
+		function onlyUnique(value, index, self) {
+			return self.indexOf(value) === index;
+		}
+
+		let path = 'structure/'+config.type+'/script.js';
+
+		if( fs.existsSync(path) ){
+
+			let content = fs.readFileSync(path, 'utf8');
+			content = content.replace("import *;", wml.imports.js.filter(onlyUnique).sort().join("\n"))
+
+			let key = config.group ? '/design_system/theme.js' : '/design_system/scripts/theme.js';
+			let file = {};
+			file[key] = content
+
+			addFiles([file])
+		}
+	};
+
+
 	wml.prototype.generateLayout = function(structure){
 
 		return Promise.all(structure.map(function(layout){
@@ -177,7 +232,7 @@ const wml = (function (config) {
 
 			try {
 
-				name = _snakeCase(name);
+				name = _kebabCase(name);
 
 				let files = [];
 
@@ -194,7 +249,7 @@ const wml = (function (config) {
 
 					if( type === 'page' ) {
 						if( isArray(structure) && isObject(structure[0]) && 'layout' in structure[0]) {
-							let layout_name = _snakeCase(structure[0].layout);
+							let layout_name = _kebabCase(structure[0].layout);
 							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'page/layout/'+layout_name+'.'+config.language.extension+'\' %}\n');
 						}
 						else {
@@ -212,15 +267,17 @@ const wml = (function (config) {
 
 							if( key[0] !== 'layout') {
 
-								let component_name = _snakeCase(key[0]);
-
-								components_import.push('import '+_camelCase(component_name)+' from "@/component/'+_snakeCase(component_name)+'";');
-								components_list.push(_camelCase(component_name));
+								let component_name = _kebabCase(key[0]);
 
 								let folder = 'component';
 
 								if( config.design !== 'component' )
-									folder = config[config.design][1];
+									folder = config[config.design][1].folder;
+
+								components_import.push('import '+_camelCase(component_name)+' from "@/'+folder+'/'+component_name+'";');
+								wml.imports.scss.push("@import './"+folder+"/"+component_name+"';");
+
+								components_list.push(_camelCase(component_name));
 
 								let tag_name = _camelCase(component_name);
 								let component = config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+component_name);
@@ -237,7 +294,7 @@ const wml = (function (config) {
 					let folder = 'page/';
 
 					if( config.design !== 'component' )
-						folder = config[config.design][0]+'/';
+						folder = config[config.design][0].folder+'/';
 
 					let subfolder = structure_files.length > 1 ? name + '/' : '';
 
@@ -466,7 +523,7 @@ const wml = (function (config) {
 				let key = isObject(component) ? Object.keys(component)[0] : component;
 				let modifiers = self.getModifiers(key);
 				let name = modifiers.name;
-				let filename = _snakeCase(name);
+				let filename = _kebabCase(name);
 
 				if( name !== 'layout') {
 
@@ -489,11 +546,30 @@ const wml = (function (config) {
 						structure_files.forEach(function(structure_file){
 
 							let folder = 'component';
-							if( config.design !== 'component' )
-								folder = config[config.design][depth];
 
-							let filepath = '/design_system/'+folder+'/' + (structure_files.length > 1 ? filename + '/' + filename : filename) + path.extname(structure_file);
+							if( config.design !== 'component' )
+								folder = config[config.design][depth].folder;
+
+							let subfolder = structure_files.length > 1 && config.group ? filename + '/' : '';
+							let ext = path.extname(structure_file);
+
+							let filepath = '/design_system/'+folder+'/' + subfolder + filename + ext;
+
+							if( !config.group ){
+
+								if( ext === '.js')
+									filepath = '/design_system/scripts/'+folder+'/' + filename + ext;
+								else if( ext === '.scss')
+									filepath = '/design_system/styles/'+folder+'/' + filename + ext;
+							}
+
 							let content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
+
+							if( ext === '.scss')
+								wml.imports.scss.push("@import './"+folder+"/"+subfolder+filename+"';");
+
+							if( ext === '.js')
+								wml.imports.js.push("import './"+folder+"/"+subfolder+filename+"';");
 
 							if( config.language.data && content.indexOf('<wml-elements></wml-elements>') !== -1 && data.content.length)
 								content = '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
@@ -506,7 +582,7 @@ const wml = (function (config) {
 								name = _camelCase(modifiers.name);
 
 							if( config.design !== 'component' )
-								name = config[config.design][depth].substr(0, 1) + '-' + _snakeCase(modifiers.name);
+								name = config[config.design][depth].prefix + '-' + _kebabCase(modifiers.name);
 
 							content = content
 								.replace(/{{ name }}/g, name)
@@ -552,7 +628,6 @@ const wml = (function (config) {
 
 						resolve({name:name, files:files, modifiers:modifiers});
 					});
-
 				}
 				else
 				{
@@ -648,16 +723,17 @@ const wml = (function (config) {
 						}
 
 						let folder = 'component';
+
 						if( config.design !== 'component' )
-							folder = config[config.design][depth];
+							folder = config[config.design][depth].folder;
 
 						let tag_name = _camelCase(component.name);
-						let _component = (component.modifiers.loop?'\t':'')+config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+_snakeCase(component.name));
+						let _component = (component.modifiers.loop?'\t':'')+config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+_kebabCase(component.name));
 
 						components.push( _component );
 
 						data.components_list.push(_camelCase(component.name));
-						data.components_import.push('import '+_camelCase(component.name)+' from "@/component/'+_snakeCase(component.name)+'";');
+						data.components_import.push('import '+_camelCase(component.name)+' from "@/component/'+_kebabCase(component.name)+'";');
 
 						if( component.modifiers.loop ){
 
@@ -728,7 +804,7 @@ const wml = (function (config) {
 
 					let html_tag = modifiers.tag ? modifiers.tag : ( hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div') );
 					let content = hasKey(tag, 'data') ? tag.data : '';
-					let filename = _snakeCase(name);
+					let filename = _kebabCase(name);
 
 					if( content === false )
 						data.content = '';
