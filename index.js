@@ -23,7 +23,7 @@ const wml = (function (config) {
 		input: false, //./structure.wml
 		acf: {
 			path: 'structure/acf',
-			ignore: ['close', 'previous', 'next', 'scroll_down', 'header', 'footer']
+			ignore: ['close', 'previous', 'next', 'scroll_down', 'header', 'footer', 'popin', 'form', 'load_more']
 		},
 		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs|vuejs-liquid-scss
 		design: 'atomic', //component|atomic|shopify
@@ -703,7 +703,7 @@ const wml = (function (config) {
 				components: '',
 				components_list: [],
 				components_import: [],
-				fields: {}
+				fields: []
 			};
 
 			if( isIterable(element) || isComponent(element) ) {
@@ -840,7 +840,7 @@ const wml = (function (config) {
 
 	wml.prototype.generateACFComponent = function(type, name, params){
 
-		if( !config.acf || ( hasKey(config.acf, 'ignore') && hasKey(config.acf.ignore, type) ) )
+		if( !config.acf || ( hasKey(config.acf, 'ignore') && hasKey(config.acf.ignore, name) ) || params === false  )
 			return [];
 
 		if( isString(params) )

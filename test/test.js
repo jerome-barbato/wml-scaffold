@@ -17,22 +17,26 @@ function test(params, output, done) {
 describe('Test for pages', function() {
 
     it('Test vuejs-twig-scss atomic generation', function(done) {
-        test({input:'./test/complex.wml', output:'./export/vuejs-twig-scss/atomic', design:'atomic', type: 'vuejs-twig-scss'}, true, done);
+        test({input:'./test/complex.wml', output:'./export/complex/vuejs-twig-scss/atomic', design:'atomic', type: 'vuejs-twig-scss'}, true, done);
     });
 
 	it('Test vuejs-twig-scss component generation', function(done) {
-		test({input:'./test/complex.wml', output:'./export/vuejs-twig-scss/component', design:'component', type: 'vuejs-twig-scss'}, true, done);
+		test({input:'./test/complex.wml', output:'./export/complex/vuejs-twig-scss/component', design:'component', type: 'vuejs-twig-scss'}, true, done);
 	});
 
 	it('Test vuejs component generation', function(done) {
-		test({input:'./test/complex.wml', output:'./export/vuejs', type: 'vuejs'}, true, done);
+		test({input:'./test/complex.wml', output:'./export/complex/vuejs', type: 'vuejs'}, true, done);
 	});
 
 	it('Test vuejs-liquid-scss component generation', function(done) {
-		test({input:'./test/complex.wml', design:'component', output:'./export/vuejs-liquid-scss/component', type: 'vuejs-liquid-scss'}, true, done);
+		test({input:'./test/complex.wml', design:'component', output:'./export/complex/vuejs-liquid-scss/component', type: 'vuejs-liquid-scss'}, true, done);
 	});
 
 	it('Test vuejs-liquid-scss shopify generation', function(done) {
-		test({input:'./test/complex.wml', design:'shopify', output:'./export/vuejs-liquid-scss/shopify', type: 'vuejs-liquid-scss'}, true, done);
+		test({input:'./test/complex.wml', design:'shopify', output:'./export/complex/vuejs-liquid-scss/shopify', type: 'vuejs-liquid-scss'}, true, done);
+	});
+
+	it('Test vuejs-twig-scss component generation', function(done) {
+		test({input:'./test/structured.wml', design:'component', output:'./export/structured/vuejs-liquid-scss/component', type: 'vuejs-liquid-scss'}, true, done);
 	});
 });
