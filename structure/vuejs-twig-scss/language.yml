@@ -1,5 +1,5 @@
 data: true
-bem: true
+bem: false
 extension: twig
 
-include: "{% include 'wml_component.twig' %}"
+include: "{% include 'components/wml_component.html.twig' %}"

@@ -27,8 +27,11 @@ const wml = (function (config) {
 		},
 		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs|vuejs-liquid-scss
 		design: 'atomic', //component|atomic|shopify
+		story: {
+			path:'structure/stories.js'
+		},
 		group: true,
-		atomic:[{folder:'page', prefix:'p'},{folder:'organism', prefix:'o'},{folder:'molecule', prefix:'m'},{folder:'atom', prefix:'a'}],
+		atomic:[{folder:'pages', prefix:'p'},{folder:'organisms', prefix:'o'},{folder:'molecules', prefix:'m'},{folder:'atoms', prefix:'a'}],
 		shopify:[{folder:'templates', prefix:'t'},{folder:'sections', prefix:'s'},{folder:'snippets', prefix:'sn'}],
 		alias: {
 			'description': 'text',
@@ -91,8 +94,6 @@ const wml = (function (config) {
 				return self.loadFile(config.input);
 			})
 			.then(self.generateFiles)
-			.then(self.generateStyle)
-			.then(self.generateScript)
 			.then(function(){
 				return self.writeFiles(wml.files);
 			})
@@ -186,7 +187,7 @@ const wml = (function (config) {
 			let content = fs.readFileSync(path, 'utf8');
 			content = content.replace("@import *;", wml.imports.scss.filter(onlyUnique).sort().join("\n"))
 
-			let key = config.group ? '/design_system/theme.scss' : '/design_system/styles/theme.scss';
+			let key = config.group ? '/components/theme.scss' : '/components/styles/theme.scss';
 			let file = {};
 			file[key] = content
 
@@ -208,7 +209,7 @@ const wml = (function (config) {
 			let content = fs.readFileSync(path, 'utf8');
 			content = content.replace("import *;", wml.imports.js.filter(onlyUnique).sort().join("\n"))
 
-			let key = config.group ? '/design_system/theme.js' : '/design_system/scripts/theme.js';
+			let key = config.group ? '/components/theme.js' : '/components/scripts/theme.js';
 			let file = {};
 			file[key] = content
 
@@ -250,7 +251,7 @@ const wml = (function (config) {
 					if( type === 'page' ) {
 						if( isArray(structure) && isObject(structure[0]) && 'layout' in structure[0]) {
 							let layout_name = _kebabCase(structure[0].layout);
-							content = content.replace(/{% extends layout %}\r\n/, '{% extends \'page/layout/'+layout_name+'.'+config.language.extension+'\' %}\n');
+							content = content.replace(/{% extends layout %}\r\n/, '{% extends \''+layout_name+'.'+config.language.extension+'\' %}\n');
 						}
 						else {
 							content = content.replace(/{% extends layout %}\r\n/, '');
@@ -280,7 +281,7 @@ const wml = (function (config) {
 								components_list.push(_camelCase(component_name));
 
 								let tag_name = _camelCase(component_name);
-								let component = config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+component_name);
+								let component = config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+component_name+"/"+component_name);
 
 								components.push( component );
 							}
@@ -317,7 +318,7 @@ const wml = (function (config) {
 						}
 					}
 
-					let filepath = '/design_system/' + folder + subfolder + name + path.extname(structure_file);
+					let filepath = '/components/' + folder + subfolder + name + path.extname(structure_file);
 					let file = {};
 
 					file[filepath] = content;
@@ -346,6 +347,9 @@ const wml = (function (config) {
 	function processData(data, indent){
 
 		let _data = {
+			args:[],
+			props:[],
+			argTypes: [],
 			scss: [],
 			elements: [],
 			content: [],
@@ -372,6 +376,9 @@ const wml = (function (config) {
 		_data.elements = format(_data.elements, '', '\n\t');
 		_data.components = format(_data.components, '', '\n\t');
 		_data.components_list = _data.components_list.join(',');
+		_data.args = _data.args.join(', ');
+		_data.props = format(_data.props, ',\n\t', '\t\t');
+		_data.argTypes = format(_data.argTypes, ',\n\t', '\t');
 		_data.components_import = _data.components_import.join('\n\t');
 
 		return _data;
@@ -427,9 +434,6 @@ const wml = (function (config) {
 			if( hasKey(modifiers, filter[0]) && filter[0] !== 'name' )
 				modifiers[filter[0]] = filter.length > 1 ? parse(filter[1]) : true;
 		});
-
-		if( modifiers.loop === true )
-			modifiers.loop = 2;
 
 		return modifiers;
 	};
@@ -553,14 +557,17 @@ const wml = (function (config) {
 							let subfolder = structure_files.length > 1 && config.group ? filename + '/' : '';
 							let ext = path.extname(structure_file);
 
-							let filepath = '/design_system/'+folder+'/' + subfolder + filename + ext;
+							if( ext === '.twig' )
+								ext = '.html.twig';
+
+							let filepath = '/components/'+folder+'/' + subfolder + filename + ext;
 
 							if( !config.group ){
 
 								if( ext === '.js')
-									filepath = '/design_system/scripts/'+folder+'/' + filename + ext;
+									filepath = '/components/scripts/'+folder+'/' + filename + ext;
 								else if( ext === '.scss')
-									filepath = '/design_system/styles/'+folder+'/' + filename + ext;
+									filepath = '/components/styles/'+folder+'/' + filename + ext;
 							}
 
 							let content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
@@ -571,9 +578,7 @@ const wml = (function (config) {
 							if( ext === '.js')
 								wml.imports.js.push("import './"+folder+"/"+subfolder+filename+"';");
 
-							if( config.language.data && content.indexOf('<wml-elements></wml-elements>') !== -1 && data.content.length)
-								content = '{% set data = data|default({\n\t'+data.content+'\n}) %}\n\n' + content;
-							else if( path.extname(structure_file) === '.vue')
+							if( path.extname(structure_file) === '.vue')
 								content = content.replace("datajs:''", data.content);
 
 							let name = camelCase(modifiers.name);
@@ -615,6 +620,15 @@ const wml = (function (config) {
 							file[filepath] = content;
 
 							files.push(file);
+
+							if( config.story && type !== 'layout' ){
+
+								file = {};
+								filepath = '/components/'+folder+'/' + subfolder + modifiers.name + '.stories.js';
+								file[filepath] = self.generateStory(modifiers, folder, data);
+
+								files.push(file);
+							}
 						});
 
 						if( config.acf && data.fields.length && modifiers.acf && type !== 'layout' ) {
@@ -697,6 +711,9 @@ const wml = (function (config) {
 		return new Promise(function (resolve, reject) {
 
 			let data = {
+				args: '',
+				props: '',
+				argTypes: '',
 				scss: '',
 				elements: '',
 				content: '',
@@ -718,8 +735,13 @@ const wml = (function (config) {
 
 							if( config.type === 'vuejs')
 								components.push("<div v-for=\"index in "+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+"\" :key=\"index\">");
-							else
-								components.push("{% for i in (1.."+(component.modifiers.loop === true ? 4 : component.modifiers.loop)+") %}");
+							else{
+
+								if( component.modifiers.loop === true )
+									components.push("{% for "+component.name+" in "+component.name+"s %}");
+								else
+									components.push("{% for i in (1.."+component.modifiers.loop+") %}");
+							}
 						}
 
 						let folder = 'component';
@@ -728,7 +750,7 @@ const wml = (function (config) {
 							folder = config[config.design][depth].folder;
 
 						let tag_name = _camelCase(component.name);
-						let _component = (component.modifiers.loop?'\t':'')+config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+_kebabCase(component.name));
+						let _component = (component.modifiers.loop?'\t':'')+config.language.include.replace('<wml_component', '<'+tag_name).replace('</wml_component', '</'+tag_name).replace('wml_component', folder+"/"+_kebabCase(component.name)+"/"+_kebabCase(component.name));
 
 						components.push( _component );
 
@@ -774,8 +796,13 @@ const wml = (function (config) {
 							else
 								elements = '<'+html_tag+' element="'+name+'">'+data.elements.replace(/\n\t/g,'\n\t\t')+'\n\t</'+html_tag+'>\n';
 
-							if( modifiers.loop )
-								elements = '\n\t{% for i in 1..'+modifiers.loop+' %}\n\t\t'+elements+'\t{% endfor %}\n';
+							if( modifiers.loop ){
+
+								if(  modifiers.loop === true )
+									elements = '\n\t{% for '+name+' in props.'+name+'s %}\n\t\t'+elements.replace(/props./g, name+'.')+'\t{% endfor %}\n';
+								else
+									elements = '\n\t{% for i in 1..'+name+' %}\n\t\t'+elements+'\t{% endfor %}\n';
+							}
 							else
 								elements = '\n\n\t'+elements;
 
@@ -804,12 +831,18 @@ const wml = (function (config) {
 
 					let html_tag = modifiers.tag ? modifiers.tag : ( hasKey(tag, 'is') ? tag.is : ( isString(tag) ? tag : 'div') );
 					let content = hasKey(tag, 'data') ? tag.data : '';
+					let control = hasKey(tag, 'control') ? tag.control : "{type: 'text'}";
 					let filename = _kebabCase(name);
 
 					if( content === false )
 						data.content = '';
-					else
+					else{
+
+						data.args = filename;
+						data.props = filename+':'+filename;
+						data.argTypes = filename+':{\n\t\t\tcontrol: '+control+'\n\t\t}';
 						data.content = filename+' : '+( !isString(content) || content.indexOf('(') !== -1 || content.indexOf('|') !== -1 || content.indexOf('{') !== -1 ? content :  '\''+content+'\'');
+					}
 
 					data.scss = '&__'+filename+'{  }';
 
@@ -817,16 +850,16 @@ const wml = (function (config) {
 					if( hasKey(tag, 'html') ){
 
 						data.elements = tag.html.replace('<wml-tag', '<'+html_tag).replace('</wml-tag>', '</'+html_tag+'>').replace('{{ name }}', filename);
-						data.elements = data.elements.replace(/{{ data/g, '{{ '+(config.language.data?'data.':'')+filename);
-						data.elements = data.elements.replace(/="data"/g, '="'+(config.language.data?'data.':'')+filename+'"');
+						data.elements = data.elements.replace(/{{ data/g, '{{ '+(config.language.data?'props.':'')+filename);
+						data.elements = data.elements.replace(/="data"/g, '="'+(config.language.data?'props.':'')+filename+'"');
 					}
 					else if( hasKey(tag, 'innerHtml') )
-						data.elements = '<'+html_tag+' element="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ data.'+filename).replace(/="data"/g, '="'+filename+'"')+'</'+html_tag+'>';
+						data.elements = '<'+html_tag+' element="'+filename+'">'+tag.innerHtml.replace(/{{ data/g, '{{ props.'+filename).replace(/="data"/g, '="'+filename+'"')+'</'+html_tag+'>';
 					else
-						data.elements = '<'+html_tag+' element="'+filename+'">{{ '+(config.language.data?'data.':'')+filename+' }}</'+html_tag+'>';
+						data.elements = '<'+html_tag+' element="'+filename+'">{{ '+(config.language.data?'props.':'')+filename+' }}</'+html_tag+'>';
 
 					if( content === false )
-						data.elements = data.elements.replace('{{ '+(config.language.data?'data.':'')+filename+' }}', '');
+						data.elements = data.elements.replace('{{ '+(config.language.data?'props.':'')+filename+' }}', '');
 
 					if( modifiers.acf && type !== 'layout' )
 						data.fields = self.generateACFComponent(modifiers.type, name, modifiers.acf);
@@ -863,6 +896,23 @@ const wml = (function (config) {
 		return field;
 	};
 
+
+	wml.prototype.generateStory = function(modifiers, folder, data){
+
+		let story = fs.readFileSync( config.story.path, 'utf8');
+
+		story = story.replace(/\$Folder/g, ucFirst(folder).replace(/-/g, ' '))
+		story = story.replace(/\$folder/g, folder)
+		story = story.replace(/\$Name/g, ucFirst(modifiers.name).replace(/-/g, ' '))
+		story = story.replace(/\$name/g, modifiers.name)
+		story = story.replace(/\$content/g, data.content)
+		story = story.replace(/\$args/g, data.args)
+		story = story.replace(/\$props/g, data.props)
+		story = story.replace(/\$argTypes/g, data.argTypes)
+		story = story.replace(/\$code/g, data.content.replace(/\t/g,'\t\t'))
+
+		return story;
+	}
 
 	wml.prototype.generateACFGroup = function(type, name){
 
@@ -904,6 +954,9 @@ const wml = (function (config) {
 		else {
 
 			return Promise.resolve({
+				args:'',
+				props:'',
+				argTypes: '',
 				scss: '',
 				elements: '',
 				content: '',

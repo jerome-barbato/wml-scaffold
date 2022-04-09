@@ -1,6 +1,4 @@
-import Vue from 'vue';
-
-Vue.component('share', {
+export default {
 	template: '<div class="{{ name }}__link" :class="social" @click="share()" :data-icon="social"><slot></slot></div>',
 	data (){
 		return{
@@ -122,4 +120,4 @@ Vue.component('share', {
 	}
 
 
-});
+}

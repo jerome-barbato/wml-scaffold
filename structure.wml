@@ -56,7 +56,7 @@ page:
     - lien
   - $slider-clients:
     - heading
-    - client|loop:
+    - $client|loop:
       - image
       - logo
   - $mosaic:

@@ -1,6 +1,4 @@
-import Vue from 'vue';
-
-Vue.component('show-more', {
+export default {
 	template: '<div class="a-showmore" :class="open"><a @click="showmore()" class="a-showmore__link"  data-icon="arrow">{{ label }}</a><transition name="slide-down"><div v-if="visible" class="a-showmore__content"><slot></slot></div></transition></div>',
 	data (){
 		return{
@@ -31,4 +29,4 @@ Vue.component('show-more', {
 	}
 
 
-});
+}

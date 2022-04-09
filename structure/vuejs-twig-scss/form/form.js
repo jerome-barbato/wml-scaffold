@@ -1,6 +1,4 @@
-import Vue from 'vue';
-
-Vue.component('form-component', {
+export default {
   data(){
     return{
       error:false,
@@ -32,4 +30,4 @@ Vue.component('form-component', {
   created(){
     this.form = this.base;
   }
-});
+}

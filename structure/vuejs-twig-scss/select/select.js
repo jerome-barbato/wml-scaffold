@@ -1,6 +1,4 @@
-import Vue from "vue";
-
-Vue.component('custom-select',{
+export default {
   template: ' <div class="a-select" :data-empty="empty"> ' +
     '  <div class="a-select__selected" @click="toggleSelect" v-html="text"></div> ' +
     '  <transition name="slideDown"> ' +
@@ -129,4 +127,4 @@ Vue.component('custom-select',{
   destroyed (){
     document.removeEventListener('click', this.hideOnClickOutside);
   }
-});
+}

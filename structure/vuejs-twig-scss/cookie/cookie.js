@@ -1,8 +1,5 @@
-import Vue from 'vue';
-
-Vue.component('cookie', {
-    template:
-    '<transition name="slide-up"><div class="Cookie" v-if="visible"><slot></slot><a class="Cookie__close" @click="hide"></a></div></transition>',
+export default {
+    template: '<transition name="slide-up"><div class="Cookie" v-if="visible"><slot></slot><a class="Cookie__close" @click="hide"></a></div></transition>',
     data(){
         return{
             visible: false
@@ -39,13 +36,13 @@ Vue.component('cookie', {
     },
     mounted(){
 
-	    this.visible = !this.getCookie('cookie-notice').length;
+        this.visible = !this.getCookie('cookie-notice').length;
 
-	    if( this.visible )
-	    {
-		    let body_classList = document.body.classList;
-		    body_classList.add('has-cookie-notice');
-	    }
+        if( this.visible )
+        {
+            let body_classList = document.body.classList;
+            body_classList.add('has-cookie-notice');
+        }
     }
-});
+}
 

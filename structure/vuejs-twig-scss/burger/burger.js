@@ -1,6 +1,4 @@
-import Vue from 'vue';
-
-Vue.component('burger', {
+export default {
 	template: '<div class="a-burger">' +
                 '<a class="a-burger__link" v-on:click="toggleVisibility"></a>' +
                 '<span class="a-burger__icon"></span>' +
@@ -10,4 +8,4 @@ Vue.component('burger', {
 			document.body.classList.toggle('burger-is-open')
 		}
 	}
-});
+}
