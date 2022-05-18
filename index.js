@@ -6,6 +6,7 @@ const mkdir      = require('mkdirp');
 const _camelCase = require('lodash.camelcase');
 const _snakeCase = require('lodash.snakecase');
 const _kebabCase = require('lodash.kebabcase');
+const glob       = require('glob');
 
 const wml = (function (config) {
 
@@ -20,16 +21,19 @@ const wml = (function (config) {
 
 	config = Object.assign({
 		output: './export',
-		input: false, //./structure.wml
+		input: __dirname+'/structure.wml',
 		acf: {
-			path: 'structure/acf',
+			output: '/../config/packages/acf',
+			path: __dirname+'/structure/acf',
 			ignore: ['close', 'previous', 'next', 'scroll_down', 'header', 'footer', 'popin', 'form', 'load_more']
 		},
 		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs|vuejs-liquid-scss
 		design: 'atomic', //component|atomic|shopify
 		story: {
-			path:'structure/stories.js'
+			path:__dirname+'/structure/stories.js'
 		},
+		delete: true,
+		layout: true,
 		group: true,
 		atomic:[{folder:'pages', prefix:'p'},{folder:'organisms', prefix:'o'},{folder:'molecules', prefix:'m'},{folder:'atoms', prefix:'a'}],
 		shopify:[{folder:'templates', prefix:'t'},{folder:'sections', prefix:'s'},{folder:'snippets', prefix:'sn'}],
@@ -56,6 +60,12 @@ const wml = (function (config) {
 	if( config.design === "shopify")
 		config.group = false;
 
+	if( config.input && config.input.substring(config.input.length-4) !== ".wml"){
+
+		config.output = config.input;
+		config.layout = false;
+		config.delete = false;
+	}
 
 	function deleteFolderRecursive(path) {
 		if( fs.existsSync(path) ) {
@@ -139,7 +149,7 @@ const wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				let tags = yaml.load(fs.readFileSync('structure/'+config.type+'/tags.yml', 'utf8'));
+				let tags = yaml.load(fs.readFileSync(__dirname+'/structure/'+config.type+'/tags.yml', 'utf8'));
 				resolve(tags);
 
 			} catch (e) {
@@ -153,7 +163,7 @@ const wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				let tags = yaml.load(fs.readFileSync('structure/'+config.type+'/language.yml', 'utf8'));
+				let tags = yaml.load(fs.readFileSync(__dirname+'/structure/'+config.type+'/language.yml', 'utf8'));
 				resolve(tags);
 
 			} catch (e) {
@@ -165,12 +175,23 @@ const wml = (function (config) {
 
 	wml.prototype.generateFiles = function(structure){
 
-		return Promise.all(Object.keys(structure).map(function(key){
-			if( key === 'layout' )
-				return self.generateLayout(structure[key]);
-			else
-				return self.generatePage(key, structure[key], 'page');
-		}));
+		if( config.layout ){
+
+			return Promise.all(Object.keys(structure).map(function(key){
+				if( key === 'layout' )
+					return self.generateLayout(structure[key]);
+				else
+					return self.generatePage(key, structure[key], 'page');
+			}));
+		}
+		else{
+
+			let components = self.loadComponents(structure);
+
+			return Promise.all(components.map(function(component){
+				return self.generateComponent(component.config, component.depth, component.type);
+			}));
+		}
 	};
 
 
@@ -180,7 +201,7 @@ const wml = (function (config) {
 			return self.indexOf(value) === index;
 		}
 
-		let path = 'structure/'+config.type+'/style.scss';
+		let path = __dirname+'/structure/'+config.type+'/style.scss';
 
 		if( fs.existsSync(path) ){
 
@@ -202,7 +223,7 @@ const wml = (function (config) {
 			return self.indexOf(value) === index;
 		}
 
-		let path = 'structure/'+config.type+'/script.js';
+		let path = __dirname+'/structure/'+config.type+'/script.js';
 
 		if( fs.existsSync(path) ){
 
@@ -237,7 +258,7 @@ const wml = (function (config) {
 
 				let files = [];
 
-				let structure_path = 'structure/'+config.type+'/'+type;
+				let structure_path = __dirname+'/structure/'+config.type+'/'+type;
 				let structure_files = fs.readdirSync(structure_path);
 
 				structure_files.forEach(function(structure_file){
@@ -531,10 +552,10 @@ const wml = (function (config) {
 
 				if( name !== 'layout') {
 
-					let structure_path = modifiers.extend ? config.output + '/component/' + modifiers.extend : 'structure/' + config.type + '/' + modifiers.type;
+					let structure_path = modifiers.extend ? config.output + '/component/' + modifiers.extend : __dirname+'/structure/' + config.type + '/' + modifiers.type;
 
 					if( !fs.existsSync(structure_path) )
-						structure_path = 'structure/' + config.type + '/default';
+						structure_path = __dirname+'/structure/' + config.type + '/default';
 
 					let structure_files = fs.readdirSync(structure_path);
 
@@ -631,7 +652,7 @@ const wml = (function (config) {
 							}
 						});
 
-						if( config.acf && data.fields.length && modifiers.acf && type !== 'layout' ) {
+						if( config.acf && data.fields.length && modifiers.acf && (type === 'page' || type === 'organisms') ) {
 
 							let group = self.generateACFGroup('component', name);
 							group.fields = data.fields;
@@ -663,7 +684,7 @@ const wml = (function (config) {
 	function createACFFile(item){
 
 		let file = {};
-		let filepath = '/acf-json/' + item.key + '.json';
+		let filepath = config.acf.output+'/' + item.key + '.json';
 		file[filepath] = JSON.stringify(item);
 
 		return file;
@@ -1003,6 +1024,39 @@ const wml = (function (config) {
 		}
 	};
 
+	wml.prototype.loadComponents = function(path){
+
+		let configFile = [];
+
+		let depths = {
+			'organisms':1,
+			'molecules':2,
+			'atoms':3
+		}
+
+		let files = glob.sync(path + '/**/*.wml');
+
+		files.forEach(file=>{
+
+			let path = file.split('/')
+			let name = path[path.length-1].replace('.wml','')
+			let content = yaml.load(fs.readFileSync(file, 'utf8'));
+			let config = {};
+
+			config[name] = content;
+
+			configFile.push({
+				config:config,
+				depth:depths[path[path.length-2]],
+				type:path[path.length-2]
+			})
+
+			fs.unlinkSync(file);
+		});
+
+		return configFile
+	};
+
 
 	wml.prototype.writeFiles = function(structure){
 
@@ -1014,15 +1068,25 @@ const wml = (function (config) {
 
 		return new Promise(function (resolve, reject) {
 			try {
-				let object = yaml.load(fs.readFileSync(file, 'utf8'));
-				resolve(object);
+
+				if( config.layout ){
+
+					let object = yaml.load(fs.readFileSync(file, 'utf8'));
+					resolve(object);
+				}
+				else{
+
+					resolve(file)
+				}
+
 			} catch (e) {
 				reject(e);
 			}
 		});
 	};
 
-	deleteFolderRecursive(config.output);
+	if( config.delete )
+		deleteFolderRecursive(config.output);
 
 });
 
