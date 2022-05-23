@@ -1056,7 +1056,7 @@ const wml = (function (config) {
 				type:path[path.length-2]
 			})
 
-		//	fs.unlinkSync(file);
+			fs.unlinkSync(file);
 		});
 
 		return configFile
