@@ -7,7 +7,6 @@ const _camelCase = require('lodash.camelcase');
 const _snakeCase = require('lodash.snakecase');
 const _kebabCase = require('lodash.kebabcase');
 const glob       = require('glob');
-const {design} = require("../barth/wml.config");
 
 const wml = (function (config) {
 
@@ -1039,7 +1038,7 @@ const wml = (function (config) {
 			depths[entry.folder] = depth
 		})
 
-		let files = glob.sync(path + '/**/*.wml');
+		let files = glob.sync(path.replace(/\\/g, '/') + '/**/*.wml');
 
 		files.forEach(file=>{
 
