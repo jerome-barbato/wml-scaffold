@@ -35,6 +35,10 @@ const wml = (function (config) {
 		delete: true,
 		layout: true,
 		group: true,
+		filepath:{
+			atomic:{templates:'/components', script:'/components', styles:'/components'},
+			shopify:{templates:'/liquid', script:'/scripts', styles:'/styles'}
+		},
 		atomic:[{folder:'pages', prefix:'p'},{folder:'organisms', prefix:'o'},{folder:'molecules', prefix:'m'},{folder:'atoms', prefix:'a'}],
 		shopify:[{folder:'templates', prefix:'t'},{folder:'sections', prefix:'s'},{folder:'snippets', prefix:'sn'}],
 		alias: {
@@ -208,7 +212,7 @@ const wml = (function (config) {
 			let content = fs.readFileSync(path, 'utf8');
 			content = content.replace("@import *;", wml.imports.scss.filter(onlyUnique).sort().join("\n"))
 
-			let key = config.group ? '/components/theme.scss' : '/components/styles/theme.scss';
+			let key = config.filepath[config.design].styles+'/theme.scss';
 			let file = {};
 			file[key] = content
 
@@ -230,7 +234,7 @@ const wml = (function (config) {
 			let content = fs.readFileSync(path, 'utf8');
 			content = content.replace("import *;", wml.imports.js.filter(onlyUnique).sort().join("\n"))
 
-			let key = config.group ? '/components/theme.js' : '/components/scripts/theme.js';
+			let key = config.filepath[config.design].scripts+'/theme.js';
 			let file = {};
 			file[key] = content
 
@@ -339,7 +343,7 @@ const wml = (function (config) {
 						}
 					}
 
-					let filepath = '/components/' + folder + subfolder + name + path.extname(structure_file);
+					let filepath = config.filepath[config.design].templates+'/' + folder + subfolder + name + path.extname(structure_file);
 					let file = {};
 
 					file[filepath] = content;
@@ -552,7 +556,7 @@ const wml = (function (config) {
 
 				if( name !== 'layout') {
 
-					let structure_path = modifiers.extend ? config.output + '/component/' + modifiers.extend : __dirname+'/structure/' + config.type + '/' + modifiers.type;
+					let structure_path = modifiers.extend ? config.output + config.filepath[config.design].templates+'/' + modifiers.extend : __dirname+'/structure/' + config.type + '/' + modifiers.type;
 
 					if( !fs.existsSync(structure_path) )
 						structure_path = __dirname+'/structure/' + config.type + '/default';
@@ -581,14 +585,14 @@ const wml = (function (config) {
 							if( ext === '.twig' )
 								ext = '.html.twig';
 
-							let filepath = '/components/'+folder+'/' + subfolder + filename + ext;
+							let filepath = config.filepath[config.design].templates+'/'+folder+'/' + subfolder + filename + ext;
 
 							if( !config.group ){
 
 								if( ext === '.js')
-									filepath = '/components/scripts/'+folder+'/' + filename + ext;
+									filepath = config.filepath[config.design].scripts+'/'+folder+'/' + filename + ext;
 								else if( ext === '.scss')
-									filepath = '/components/styles/'+folder+'/' + filename + ext;
+									filepath = config.filepath[config.design].styles+'/'+folder+'/' + filename + ext;
 							}
 
 							let content = fs.readFileSync(structure_path + '/' + structure_file, 'utf8');
@@ -645,7 +649,7 @@ const wml = (function (config) {
 							if( config.story && type !== 'layout' ){
 
 								file = {};
-								filepath = '/components/'+folder+'/' + subfolder + modifiers.name + '.stories.js';
+								filepath = config.filepath[config.design].templates+'/'+folder+'/' + subfolder + modifiers.name + '.stories.js';
 								file[filepath] = self.generateStory(modifiers, folder, data);
 
 								files.push(file);
@@ -776,7 +780,7 @@ const wml = (function (config) {
 						components.push( _component );
 
 						data.components_list.push(_camelCase(component.name));
-						data.components_import.push('import '+_camelCase(component.name)+' from "@/component/'+_kebabCase(component.name)+'";');
+						data.components_import.push('import '+_camelCase(component.name)+' from "@/'+folder+'/'+_kebabCase(component.name)+'";');
 
 						if( component.modifiers.loop ){
 
@@ -1028,13 +1032,13 @@ const wml = (function (config) {
 
 		let configFile = [];
 
-		let depths = {
-			'organisms':1,
-			'molecules':2,
-			'atoms':3
-		}
+		let depths = {}
 
-		let files = glob.sync(path + '/**/*.wml');
+		config[config.design].forEach((entry, depth)=>{
+			depths[entry.folder] = depth
+		})
+
+		let files = glob.sync(path.replace(/\\/g, '/') + '/**/*.wml');
 
 		files.forEach(file=>{
 
