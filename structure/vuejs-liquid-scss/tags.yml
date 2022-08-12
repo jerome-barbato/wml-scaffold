@@ -61,7 +61,7 @@ project: article
 
 link:
   data: '#'
-  html: '<a element="{{ name }}" href="{{ data }}"></a>'
+  html: '<a element="{{ name }}" href="{{ data.url }}">{{ data.title }}</a>'
 
 number:
   data: 85
