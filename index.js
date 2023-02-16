@@ -8,7 +8,7 @@ const _snakeCase = require('lodash.snakecase');
 const _kebabCase = require('lodash.kebabcase');
 const glob       = require('glob');
 
-const wml = (function (config) {
+const wml = (function (_config) {
 
 	let self = this;
 
@@ -19,7 +19,7 @@ const wml = (function (config) {
 		scss :[]
 	};
 
-	config = Object.assign({
+	let config = Object.assign({
 		output: './export',
 		input: __dirname+'/structure.wml',
 		acf: {
@@ -58,13 +58,16 @@ const wml = (function (config) {
 		},
 		components: ['slider', 'slide']
 
-	}, config);
+	}, _config);
 
 	if( config.type === "vuejs")
 		config.design = "component";
 
 	if( config.design === "shopify")
 		config.group = false;
+
+	if( typeof _config.acf == 'undefined' && config.design === "wordpress")
+		config.acf.output = '/../config/acf';
 
 	if( config.input && config.input.substring(config.input.length-4) !== ".wml"){
 
@@ -661,9 +664,9 @@ const wml = (function (config) {
 							}
 						});
 
-						if( config.acf && data.fields.length && modifiers.acf && (type === 'page' || type === 'organisms') ) {
+						if( config.acf && data.fields.length && modifiers.acf && (type === 'page' || type === 'organisms' || type === 'block') ) {
 
-							let group = self.generateACFGroup('component', name);
+							let group = self.generateACFGroup(type === 'block' ? 'block' : 'component', name);
 							group.fields = data.fields;
 							files.push( createACFFile(group) );
 						}
@@ -957,6 +960,12 @@ const wml = (function (config) {
 
 		if( type === 'page' )
 			group.fields[0].key = getId('field_', 'layout'+name);
+
+		if( type === 'block'){
+
+			group.location[0][0].value = "acf\/"+name
+			group.description = name
+		}
 
 		return group;
 	};
