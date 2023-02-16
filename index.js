@@ -28,7 +28,7 @@ const wml = (function (config) {
 			ignore: ['close', 'previous', 'next', 'scroll_down', 'header', 'footer', 'popin', 'form', 'load_more']
 		},
 		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs|vuejs-liquid-scss
-		design: 'atomic', //component|atomic|shopify
+		design: 'atomic', //component|atomic|shopify|wordpress
 		story: {
 			path:__dirname+'/structure/stories.js'
 		},
@@ -37,10 +37,12 @@ const wml = (function (config) {
 		group: true,
 		filepath:{
 			atomic:{templates:'/components', script:'/components', styles:'/components'},
-			shopify:{templates:'/liquid', script:'/scripts', styles:'/styles'}
+			shopify:{templates:'/liquid', script:'/scripts', styles:'/styles'},
+			wordpress:{templates:'/', script:'/', styles:'/'}
 		},
 		atomic:[{folder:'pages', prefix:'p'},{folder:'organisms', prefix:'o'},{folder:'molecules', prefix:'m'},{folder:'atoms', prefix:'a'}],
 		shopify:[{folder:'templates', prefix:'t'},{folder:'sections', prefix:'s'},{folder:'snippets', prefix:'sn'}],
+		wordpress:[{folder:'templates', prefix:'t'},{folder:'block', prefix:'b'},{folder:'partial', prefix:'p'}],
 		alias: {
 			'description': 'text',
 			'breadcrumb': 'nav',
@@ -578,6 +580,9 @@ const wml = (function (config) {
 
 							if( config.design !== 'component' )
 								folder = config[config.design][depth].folder;
+
+							if( folder == 'block' )
+								tag = 'section'
 
 							let subfolder = structure_files.length > 1 && config.group ? filename + '/' : '';
 							let ext = path.extname(structure_file);

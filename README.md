@@ -54,7 +54,7 @@ parameters are:
  - output, default `'./export'`
  - input , default `false`
  - type, default `vue-twig-scss`, options : `vuejs-twig-scss|vuejs|vuejs-liquid-scss`
- - design, default `component`, options : `component|atomic|shopify`
+ - design, default `component`, options : `component|atomic|shopify|wordpress`
 
 ## As module
 

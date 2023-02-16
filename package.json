@@ -1,6 +1,6 @@
 {
   "name": "wml-scaffold",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Generate file and folder structure from wml file",
   "main": "index.js",
   "scripts": {
