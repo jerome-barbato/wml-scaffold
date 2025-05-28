@@ -27,13 +27,13 @@ date: time
 
 image:
   is: div
-  innerHtml: '{% if props.image|default %} {{ props.image|toHTML(800,600) }} {% endif %}'
+  innerHtml: '{{ props.image|picture(800,600) }} '
   data: "/tmp/placeholder.jpg"
   control: "{type: 'file', accept: '.png,.jpg,.gif'}"
 
 background:
   is: div
-  innerHtml: '{% if props.image|default %} {{ props.image|toHTML(800,600) }} {% endif %}'
+  innerHtml: '{{ props.image|picture(800,600) }}'
   data: "/tmp/placeholder.jpg"
   control: "{type: 'file', accept: '.png,.jpg,.gif'}"
 

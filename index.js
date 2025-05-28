@@ -27,8 +27,8 @@ const wml = (function (_config) {
 			path: __dirname+'/structure/acf',
 			ignore: ['close', 'previous', 'next', 'scroll_down', 'header', 'footer', 'popin', 'form', 'load_more']
 		},
-		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs|vuejs-liquid-scss
-		design: 'atomic', //component|atomic|shopify|wordpress
+		type: 'vuejs-twig-scss', //vuejs-twig-scss|vuejs-liquid-scss
+		design: 'atomic', //atomic|shopify|wordpress
 		story: {
 			path:__dirname+'/structure/stories.js'
 		},
@@ -60,8 +60,6 @@ const wml = (function (_config) {
 
 	}, _config);
 
-	if( config.type === "vuejs")
-		config.design = "component";
 
 	if( config.design === "shopify")
 		config.group = false;
@@ -590,7 +588,7 @@ const wml = (function (_config) {
 							let subfolder = structure_files.length > 1 && config.group ? filename + '/' : '';
 							let ext = path.extname(structure_file);
 
-							if( ext === '.twig' )
+							if( ext === '.twig' && config.design !== 'wordpress' )
 								ext = '.html.twig';
 
 							let filepath = config.filepath[config.design].templates+'/'+folder+'/' + subfolder + filename + ext;

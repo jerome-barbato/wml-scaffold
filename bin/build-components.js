@@ -5,7 +5,7 @@ const { dirname } = require('path');
 const appDir = process.env.INIT_CWD;
 const wml = require('../index');
 
-const params = require(appDir+'/wml.config.js');
+const params = require(appDir+'/wml.config.cjs');
 
 if( params.input )
     params.input = appDir+'/'+params.input;
