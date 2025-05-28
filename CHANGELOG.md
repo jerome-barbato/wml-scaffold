@@ -1,6 +1,9 @@
 # Changelog
 
-### 0.3
+### 0.0.4
+- Remove unused files
+
+### 0.0.3
 - Require needs a .cjs now
 
 ### 0.1.1
